@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { HomeIndicator, StatusBar } from "../components/ui";
+import { rowEnter, tapCard } from "../components/motion";
 import type { BuzzEvent } from "../data/types";
 import { useStore } from "../state/store";
 
@@ -45,12 +46,13 @@ export default function BuzzTab() {
     }
   };
 
-  const renderRow = (b: BuzzEvent) => {
+  const renderRow = (b: BuzzEvent, i: number) => {
     const Icon = ICONS[b.icon];
     return (
       <motion.button
         key={b.id}
-        whileTap={{ scale: 0.99 }}
+        {...rowEnter(i)}
+        whileTap={tapCard}
         onClick={() => onRowTap(b)}
         className="flex w-full items-center gap-3 py-3 text-left"
       >
@@ -79,7 +81,9 @@ export default function BuzzTab() {
         <div className="divide-y divide-line-200">{state.buzz.map(renderRow)}</div>
 
         <p className="pt-5 text-sm font-semibold text-ink-600">Earlier</p>
-        <div className="divide-y divide-line-200">{EARLIER.map(renderRow)}</div>
+        <div className="divide-y divide-line-200">
+          {EARLIER.map((b, i) => renderRow(b, i + state.buzz.length))}
+        </div>
       </div>
 
       <HomeIndicator />

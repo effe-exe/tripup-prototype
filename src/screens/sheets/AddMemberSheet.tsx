@@ -78,9 +78,25 @@ export default function AddMemberSheet() {
                 gap: 1,
               }}
             >
-              {QR_CELLS.map((on, i) => (
-                <div key={i} className={on ? "bg-ink-900" : "bg-paper-0"} />
-              ))}
+              {/* Squares draw in on a diagonal sweep — one fast pass on open */}
+              {QR_CELLS.map((on, i) =>
+                on ? (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0.4, scale: 0.3 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      duration: 0.22,
+                      ease: [0.2, 0, 0, 1],
+                      delay:
+                        ((Math.floor(i / QR_SIZE) + (i % QR_SIZE)) / (2 * QR_SIZE - 2)) * 0.34,
+                    }}
+                    className="bg-ink-900"
+                  />
+                ) : (
+                  <div key={i} />
+                ),
+              )}
             </div>
           </div>
           <p className="text-xs font-medium text-ink-500">Or let them scan this</p>

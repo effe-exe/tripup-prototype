@@ -16,6 +16,7 @@ import { MEMBERS } from "../data/mock";
 import type { Expense, MemberId } from "../data/types";
 import { expenseShares, fmtEUR, fmtEURWhole } from "../data/balances";
 import {
+  AnimatedNumber,
   Avatar,
   GhostButton,
   HomeIndicator,
@@ -24,6 +25,7 @@ import {
   StatusBadge,
   StatusBar,
 } from "../components/ui";
+import { rowEnter, springFirm, tapCard } from "../components/motion";
 
 const EXPENSE_ICONS: Record<string, LucideIcon> = {
   "e-airbnb": HomeIcon,
@@ -34,26 +36,13 @@ const EXPENSE_ICONS: Record<string, LucideIcon> = {
   "e-dinner": UtensilsCrossed,
 };
 
-/** Gentle single-pass pop when a money figure changes. */
-function Num({ value, className }: { value: string; className?: string }) {
-  return (
-    <motion.span
-      key={value}
-      initial={{ opacity: 0.4, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className={`tabular inline-block ${className ?? ""}`}
-    >
-      {value}
-    </motion.span>
-  );
-}
-
-function ExpenseRow({ e, onOpen }: { e: Expense; onOpen: () => void }) {
+function ExpenseRow({ e, i, onOpen }: { e: Expense; i: number; onOpen: () => void }) {
   const Icon = EXPENSE_ICONS[e.id] ?? Receipt;
   const isDinner = e.id === "e-dinner";
   return (
-    <button
+    <motion.button
+      {...rowEnter(i)}
+      whileTap={tapCard}
       onClick={onOpen}
       className="flex w-full items-center gap-3 rounded-2xl bg-paper-0 p-3.5 text-left shadow-elev-1 active:bg-paper-100"
     >
@@ -77,7 +66,7 @@ function ExpenseRow({ e, onOpen }: { e: Expense; onOpen: () => void }) {
       </div>
       <span className="tabular text-[15px] font-bold text-ink-900">{fmtEUR(e.amount)}</span>
       <ChevronRight size={16} strokeWidth={2.25} className="-ml-1.5 shrink-0 text-ink-400" />
-    </button>
+    </motion.button>
   );
 }
 
@@ -106,7 +95,7 @@ export default function SplitTab() {
           Split · Lisboa com Amigos
         </h1>
         <span className="tabular shrink-0 rounded-full bg-paper-100 px-3 py-1.5 text-xs font-semibold text-ink-600">
-          <Num value={fmtEURWhole(tripTotal)} /> trip total
+          <AnimatedNumber value={tripTotal} format={fmtEURWhole} /> trip total
         </span>
       </div>
 
@@ -126,10 +115,11 @@ export default function SplitTab() {
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-32 pt-3">
         {state.splitSegment === "expenses" ? (
           <div className="flex flex-col gap-2.5">
-            {newestFirst.map((e) => (
+            {newestFirst.map((e, i) => (
               <ExpenseRow
                 key={e.id}
                 e={e}
+                i={i}
                 onOpen={() => dispatch({ type: "OPEN_SHEET", sheet: "expenseDetail", payload: e.id })}
               />
             ))}
@@ -141,8 +131,9 @@ export default function SplitTab() {
               <p className="text-[15px] font-semibold text-sunset-700">
                 {ariSquare ? "You're all square ✨" : ariBal < 0 ? "You owe" : "You're owed"}
               </p>
-              <Num
-                value={fmtEUR(Math.abs(ariBal))}
+              <AnimatedNumber
+                value={Math.abs(ariBal)}
+                format={fmtEUR}
                 className="mt-1 text-[34px] font-extrabold leading-10 tracking-[-0.5px] text-ink-900"
               />
             </div>
@@ -150,7 +141,7 @@ export default function SplitTab() {
             {/* Balance list */}
             <div className="rounded-3xl bg-paper-0 p-4 shadow-elev-1">
               <div className="flex flex-col gap-3.5">
-                {sorted.map((id) => {
+                {sorted.map((id, i) => {
                   const v = bal(id);
                   const zero = Math.abs(v) < 0.005;
                   const isOpen = openMember === id;
@@ -159,8 +150,10 @@ export default function SplitTab() {
                     .map((e) => ({ e, share: expenseShares(e)[id] ?? 0 }))
                     .filter((r) => r.share > 0.005);
                   return (
-                    <div key={id}>
-                      <button
+                    <motion.div key={id} {...rowEnter(i)}>
+                      <motion.button
+                        whileTap={tapCard}
+                        transition={springFirm}
                         onClick={() => setOpenMember(isOpen ? null : id)}
                         className="flex w-full items-center gap-2.5 text-left"
                       >
@@ -188,14 +181,15 @@ export default function SplitTab() {
                             €0 ✓
                           </span>
                         ) : (
-                          <Num
-                            value={`${v < 0 ? "−" : "+"}${fmtEUR(Math.abs(v))}`}
+                          <AnimatedNumber
+                            value={Math.abs(v)}
+                            format={(n) => `${v < 0 ? "−" : "+"}${fmtEUR(n)}`}
                             className={`shrink-0 text-sm font-bold ${
                               v < 0 ? "text-error-600" : "text-lagoon-700"
                             }`}
                           />
                         )}
-                      </button>
+                      </motion.button>
                       {/* Inline contribution mini-list — one open at a time */}
                       <AnimatePresence initial={false}>
                         {isOpen && (
@@ -265,7 +259,7 @@ export default function SplitTab() {
                           </motion.div>
                         )}
                       </AnimatePresence>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -280,8 +274,8 @@ export default function SplitTab() {
                     <span className="tabular">{state.transfers.length}</span> payments
                   </p>
                   <div className="mt-3 flex flex-col gap-3">
-                    {state.transfers.map((t) => (
-                      <div key={t.from} className="flex items-center gap-2.5">
+                    {state.transfers.map((t, i) => (
+                      <motion.div key={t.from} {...rowEnter(i, 0.06)} className="flex items-center gap-2.5">
                         <Avatar id={t.from} size={28} state={t.status === "paid" ? "settled" : "default"} />
                         <span className="flex-1 text-sm font-semibold text-ink-900">
                           {MEMBERS[t.from].name} → {MEMBERS[t.to].name}
@@ -290,7 +284,7 @@ export default function SplitTab() {
                           {fmtEUR(t.amount)}
                         </span>
                         <StatusBadge status={t.status} />
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                   <p className="mt-3 text-xs font-medium text-ink-500">

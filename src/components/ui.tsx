@@ -1,9 +1,17 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  animate,
+  useDragControls,
+  useMotionValue,
+  useReducedMotion,
+} from "framer-motion";
 import { Home, Layers, Plus, Coins, Bell, ChevronLeft } from "lucide-react";
 import { MEMBERS } from "../data/mock";
 import type { MemberId } from "../data/types";
 import { useStore, type Tab } from "../state/store";
+import { EASE_STD, springFirm, springSnap, tapChip } from "./motion";
 
 /* ---------- Avatar (mirrors Figma Avatar/40 variant set) ---------- */
 
@@ -84,6 +92,56 @@ export function AvatarStack({ ids, size = 28 }: { ids: MemberId[]; size?: number
       ))}
     </div>
   );
+}
+
+/* ---------- Animated number ----------
+   Counts to a new value over 500ms on the standard curve. The motion value is
+   rounded to whole units while in flight (no sub-decimal jitter / flicker) and
+   snaps to the exact value on completion. Reduced motion → instant. */
+
+export function AnimatedNumber({
+  value,
+  format = (n: number) => String(n),
+  className,
+}: {
+  value: number;
+  format?: (n: number) => string;
+  className?: string;
+}) {
+  const reduce = useReducedMotion();
+  const mv = useMotionValue(value);
+  const [shown, setShown] = React.useState(value);
+  const flying = React.useRef(false);
+
+  React.useEffect(() => {
+    if (reduce) {
+      mv.set(value);
+      setShown(value);
+      return;
+    }
+    flying.current = true;
+    const controls = animate(mv, value, {
+      duration: 0.5,
+      ease: EASE_STD,
+      onComplete: () => {
+        flying.current = false;
+        setShown(value);
+      },
+    });
+    return () => controls.stop();
+  }, [value, mv, reduce]);
+
+  React.useEffect(
+    () =>
+      mv.on("change", (v) => {
+        if (!flying.current) return;
+        const step = Math.round(v);
+        setShown((prev) => (step === prev ? prev : step));
+      }),
+    [mv],
+  );
+
+  return <span className={`tabular inline-block ${className ?? ""}`}>{format(shown)}</span>;
 }
 
 /* ---------- Buttons (Figma Button/Primary·Secondary·Ghost, all states) ---------- */
@@ -171,7 +229,9 @@ export function Chip({
   onClick?: () => void;
 }) {
   return (
-    <button
+    <motion.button
+      whileTap={tapChip}
+      transition={springFirm}
       onClick={onClick}
       className={`h-9 shrink-0 rounded-full px-3.5 text-[13px] font-semibold transition-colors ${
         selected
@@ -180,20 +240,35 @@ export function Chip({
       }`}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
 
 /* ---------- Badge/Status (Paid/Pending) ---------- */
 
+/** Gentle badge swap: the old state crossfades out (popped from flow) while the
+ *  new one scales in. No colour flash, single pass. */
 export function StatusBadge({ status }: { status: "paid" | "pending" }) {
-  return status === "paid" ? (
-    <span className="rounded-full bg-lagoon-50 px-2.5 py-1 text-xs font-semibold text-lagoon-700">
-      paid ✓
-    </span>
-  ) : (
-    <span className="rounded-full bg-paper-100 px-2.5 py-1 text-xs font-semibold text-ink-500">
-      pending
+  return (
+    <span className="inline-flex shrink-0">
+      {/* popLayout pops the outgoing badge out of flow, so the row never
+          collapses mid-swap — and no `layout` projection to distort the text */}
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={status}
+          initial={{ opacity: 0, scale: 0.86 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.92 }}
+          transition={springFirm}
+          className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${
+            status === "paid"
+              ? "bg-lagoon-50 text-lagoon-700"
+              : "bg-paper-100 text-ink-500"
+          }`}
+        >
+          {status === "paid" ? "paid ✓" : "pending"}
+        </motion.span>
+      </AnimatePresence>
     </span>
   );
 }
@@ -236,15 +311,17 @@ export function Segmented<T extends string>({
 
 /* ---------- Status bar + home indicator (StatusBar/HiFi) ---------- */
 
+/** On a real phone (≤450px, full-bleed) the device draws its own status bar —
+ *  the faux one collapses to a safe-area spacer instead. */
 export function StatusBar({ light }: { light?: boolean }) {
   const c = light ? "#FFFFFF" : "#1C1917";
   return (
-    <div className="relative z-30 flex h-[54px] shrink-0 items-end justify-between px-10 pb-1.5">
-      <span className="text-[17px] font-semibold" style={{ color: c }}>
+    <div className="relative z-30 flex h-[54px] shrink-0 items-end justify-between px-10 pb-1.5 max-[450px]:h-[env(safe-area-inset-top)] max-[450px]:pb-0">
+      <span className="text-[17px] font-semibold max-[450px]:hidden" style={{ color: c }}>
         9:41
       </span>
-      <div className="absolute left-1/2 top-[11px] h-[37px] w-[125px] -translate-x-1/2 rounded-full bg-[#050505]" />
-      <svg width="78" height="14" viewBox="0 0 78 14" fill="none">
+      <div className="absolute left-1/2 top-[11px] h-[37px] w-[125px] -translate-x-1/2 rounded-full bg-[#050505] max-[450px]:hidden" />
+      <svg className="max-[450px]:hidden" width="78" height="14" viewBox="0 0 78 14" fill="none">
         <rect x="0" y="8" width="3" height="5" rx="1" fill={c} />
         <rect x="5" y="6" width="3" height="7" rx="1" fill={c} />
         <rect x="10" y="4" width="3" height="9" rx="1" fill={c} />
@@ -262,7 +339,7 @@ export function StatusBar({ light }: { light?: boolean }) {
 
 export function HomeIndicator({ light }: { light?: boolean }) {
   return (
-    <div className="pointer-events-none absolute bottom-2 left-1/2 z-40 h-[5px] w-[134px] -translate-x-1/2 rounded-full"
+    <div className="pointer-events-none absolute bottom-2 left-1/2 z-40 h-[5px] w-[134px] -translate-x-1/2 rounded-full max-[450px]:hidden"
       style={{ background: light ? "#FFFFFF" : "#1C1917" }}
     />
   );
@@ -311,38 +388,66 @@ export function TabBar() {
     { key: "split", label: "Split", icon: <Coins size={24} strokeWidth={1.75} /> },
     { key: "buzz", label: "Buzz", icon: <Bell size={24} strokeWidth={1.75} /> },
   ];
+  const quickOpen = state.sheet === "quickActions";
   const render = (t: (typeof tabs)[number]) => {
     const active = state.tab === t.key;
     return (
-      <button
+      <motion.button
         key={t.key}
+        whileTap={{ scale: 0.94 }}
+        transition={springFirm}
         onClick={() => dispatch({ type: "SET_TAB", tab: t.key })}
         className="relative flex w-14 flex-col items-center gap-1"
         style={{ color: active ? "#FF5A45" : "#767066" }}
       >
-        {t.icon}
+        {/* icon settles into place when the tab becomes active */}
+        <motion.span
+          initial={false}
+          animate={{ scale: active ? 1 : 0.9 }}
+          transition={springSnap}
+          className="block"
+        >
+          {t.icon}
+        </motion.span>
         <span className="text-[11px] font-semibold" style={{ color: active ? "#C4331F" : "#767066" }}>
           {t.label}
         </span>
+        {/* shared-layout indicator slides between tabs */}
+        {active && (
+          <motion.span
+            layoutId="tab-indicator"
+            transition={springSnap}
+            className="absolute -bottom-1.5 h-1 w-1 rounded-full bg-sunset-500"
+          />
+        )}
         {t.key === "buzz" && buzzUnread > 0 && (
           <span className="absolute -top-1 right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-error-600 px-1 text-[10px] font-bold text-white">
             {buzzUnread}
           </span>
         )}
-      </button>
+      </motion.button>
     );
   };
   return (
-    <div className="absolute inset-x-0 bottom-0 z-30 border-t border-line-200 bg-paper-0 pb-6">
+    <div className="absolute inset-x-0 bottom-0 z-30 border-t border-line-200 bg-paper-0 pb-6 max-[450px]:pb-[max(env(safe-area-inset-bottom),12px)]">
       <div className="flex h-16 items-center justify-between px-6">
         {render(tabs[0])}
         {render(tabs[1])}
         <motion.button
           whileTap={{ scale: 0.92 }}
+          transition={springFirm}
           onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "quickActions" })}
           className="-mt-2 flex h-11 w-11 items-center justify-center rounded-full bg-sunset-500 text-white shadow-elev-3"
         >
-          <Plus size={22} strokeWidth={2.25} />
+          {/* plus turns into a close-ish glyph while the quick-actions sheet is up */}
+          <motion.span
+            initial={false}
+            animate={{ rotate: quickOpen ? 90 : 0 }}
+            transition={springSnap}
+            className="block"
+          >
+            <Plus size={22} strokeWidth={2.25} />
+          </motion.span>
         </motion.button>
         {render(tabs[2])}
         {render(tabs[3])}
@@ -364,6 +469,28 @@ export function BottomSheet({
   children: React.ReactNode;
   full?: boolean;
 }) {
+  const dragControls = useDragControls();
+  /** Armed at pointer-down only while the body is scrolled to the very top;
+   *  a downward move then hands the gesture over to the sheet. While the body
+   *  is scrolled, it never arms — so native scrolling is untouched.
+   *  (framer only stamps `touch-action` when dragListener !== false, so with
+   *  controls-driven drag the inner scroller keeps its own touch behaviour.) */
+  const armed = React.useRef(false);
+  const originY = React.useRef(0);
+
+  const arm = (e: React.PointerEvent<HTMLDivElement>) => {
+    armed.current = e.currentTarget.scrollTop <= 0;
+    originY.current = e.clientY;
+  };
+  const maybeTakeOver = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!armed.current || e.clientY - originY.current < 8) return;
+    armed.current = false;
+    dragControls.start(e);
+  };
+  const disarm = () => {
+    armed.current = false;
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -381,11 +508,40 @@ export function BottomSheet({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 32 }}
+            /* Swipe-down-to-dismiss from anywhere on the sheet. Downward drag
+               follows the finger 1:1; upward rubber-bands against the top edge
+               and springs home. Release past 120px or over 500px/s → close. */
+            drag="y"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0 }}
+            dragElastic={0.15}
+            dragSnapToOrigin
+            dragTransition={{ bounceStiffness: 300, bounceDamping: 32 }}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 120 || info.velocity.y > 500) onClose();
+            }}
             className="absolute inset-x-0 bottom-0 z-50 flex flex-col rounded-t-3xl bg-paper-0 shadow-elev-sheet"
             style={{ maxHeight: full ? "92%" : "60%", minHeight: full ? "92%" : undefined }}
           >
-            <div className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-line-300" />
-            <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+            {/* Grabber — always draggable, even when the body is scrolled */}
+            <div
+              onPointerDown={(e) => dragControls.start(e)}
+              className="-mb-2 flex shrink-0 cursor-grab justify-center pb-2 pt-2 active:cursor-grabbing"
+              style={{ touchAction: "none" }}
+            >
+              <div className="h-1 w-9 rounded-full bg-line-300" />
+            </div>
+            <div
+              onPointerDown={arm}
+              onPointerMove={maybeTakeOver}
+              onPointerUp={disarm}
+              onPointerCancel={disarm}
+              className="min-h-0 flex-1 overflow-y-auto"
+              style={{ overscrollBehavior: "contain" }}
+            >
+              {children}
+            </div>
           </motion.div>
         </>
       )}
@@ -408,10 +564,17 @@ export function BannerHost() {
             exit={{ y: -16, opacity: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 30 }}
             onClick={() => dispatch({ type: "POP_BANNER", id: b.id })}
-            className="pointer-events-auto flex items-center gap-2.5 rounded-2xl bg-paper-0 px-4 py-3 text-left shadow-elev-3"
+            className="pointer-events-auto relative flex items-center gap-2.5 overflow-hidden rounded-2xl bg-paper-0 px-4 py-3 text-left shadow-elev-3"
           >
             <span className="text-lg">{b.emoji}</span>
             <span className="text-sm font-semibold text-ink-900">{b.text}</span>
+            {/* auto-dismiss runway — drains once over the banner's 4s life */}
+            <motion.span
+              initial={{ scaleX: 1 }}
+              animate={{ scaleX: 0 }}
+              transition={{ duration: 4, ease: "linear" }}
+              className="absolute inset-x-0 bottom-0 h-[2px] origin-left bg-ink-900/20"
+            />
           </motion.button>
         ))}
       </AnimatePresence>

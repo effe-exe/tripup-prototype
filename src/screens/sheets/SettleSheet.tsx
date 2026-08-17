@@ -1,9 +1,10 @@
-import { AnimatePresence, motion } from "framer-motion";
+﻿import { AnimatePresence, motion } from "framer-motion";
 import { useStore } from "../../state/store";
 import { MEMBERS } from "../../data/mock";
 import type { MemberId } from "../../data/types";
 import { fmtEUR, fmtEURWhole } from "../../data/balances";
-import { Avatar, BottomSheet, StatusBadge } from "../../components/ui";
+import { AnimatedNumber, Avatar, BottomSheet, StatusBadge } from "../../components/ui";
+import { rowEnter } from "../../components/motion";
 
 const WRAP_AVATARS: MemberId[] = ["ari", "nic", "maya", "tomas", "zoe", "ren"];
 
@@ -49,7 +50,7 @@ export default function SettleSheet() {
           <div className="flex items-baseline justify-between">
             <h2 className="text-[20px] font-bold tracking-[-0.2px] text-ink-900">Settle board</h2>
             <span className="tabular text-[13px] font-semibold text-ink-500">
-              {paid} of {total} settled
+              <AnimatedNumber value={paid} /> of {total} settled
             </span>
           </div>
 
@@ -62,11 +63,11 @@ export default function SettleSheet() {
           </div>
 
           <div className="mt-4 flex flex-col gap-2.5">
-            {state.transfers.map((t) => (
+            {state.transfers.map((t, i) => (
               <motion.div
                 key={t.from}
                 layout
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                {...rowEnter(i, 0.06)}
                 className="flex items-center gap-3 rounded-2xl border border-line-200 bg-paper-0 p-3.5 shadow-elev-1"
               >
                 <Avatar id={t.from} size={40} state={t.status === "paid" ? "settled" : "default"} />
@@ -114,15 +115,15 @@ export default function SettleSheet() {
                 <motion.h2
                   initial={{ opacity: 0.4, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 26, delay: 0.15 }}
+                  transition={{ type: "spring", stiffness: 240, damping: 30, delay: 0.1 }}
                   className="text-[30px] font-extrabold leading-9 tracking-[-0.5px] text-white"
                 >
-                  That's a wrap, Lisboa 🏁
+                  That's a wrap, Lisboa 🏁
                 </motion.h2>
                 <motion.p
                   initial={{ opacity: 0.4, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 26, delay: 0.3 }}
+                  transition={{ type: "spring", stiffness: 240, damping: 30, delay: 0.16 }}
                   className="tabular text-sm font-semibold text-white/95"
                 >
                   {fmtEURWhole(tripTotal)} · 4 days · 6 friends · 0 debts
@@ -130,7 +131,7 @@ export default function SettleSheet() {
                 <motion.div
                   initial={{ opacity: 0.4, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 26, delay: 0.45 }}
+                  transition={{ type: "spring", stiffness: 240, damping: 30, delay: 0.22 }}
                   className="flex gap-1.5"
                 >
                   {WRAP_AVATARS.map((id) => (
@@ -140,7 +141,7 @@ export default function SettleSheet() {
                 <motion.div
                   initial={{ opacity: 0.4, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 26, delay: 0.6 }}
+                  transition={{ type: "spring", stiffness: 240, damping: 30, delay: 0.28 }}
                   className="mt-3 flex flex-col items-center gap-2"
                 >
                   <motion.button

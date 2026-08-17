@@ -292,8 +292,16 @@ function TopCard({
       }}
       style={{ x, y, rotate }}
     >
-      {/* 3D flip: front (photo) ↔ back (details) — gentle single pass */}
-      <div className="h-full w-full" style={{ perspective: 1200 }}>
+      {/* Promotion: the newly-top card settles up from the stack position it
+          held a moment ago (scale 0.95 → 1, y 8 → 0). Applied here rather than
+          on the root so it can't fight the drag/fly motion values. */}
+      <motion.div
+        className="h-full w-full"
+        style={{ perspective: 1200 }}
+        initial={{ scale: 0.95, y: 8 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 280, damping: 30 }}
+      >
         <motion.div
           className="relative h-full w-full"
           style={{ transformStyle: "preserve-3d" }}
@@ -311,7 +319,7 @@ function TopCard({
             <CardBack rest={rest} onFlipBack={onFlipBack} />
           </div>
         </motion.div>
-      </div>
+      </motion.div>
       <motion.span
         style={{ opacity: likeOpacity }}
         className="absolute left-5 top-16 -rotate-12 rounded-xl border-[3px] border-lagoon-500 bg-white/85 px-3 py-1 text-xl font-extrabold tracking-wide text-lagoon-500"
@@ -555,24 +563,50 @@ export default function SwipeDeck() {
               transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.15 }}
               className="w-full rounded-3xl bg-paper-0 px-6 pb-6 pt-7 text-center shadow-elev-3"
             >
-              <h2 className="text-[32px] font-extrabold leading-9 tracking-[-0.5px] text-ink-900">
+              {/* contents cascade 80ms apart — one pass, then everything rests */}
+              <motion.h2
+                initial={{ opacity: 0.4, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.26 }}
+                className="text-[32px] font-extrabold leading-9 tracking-[-0.5px] text-ink-900"
+              >
                 It's a match! 🔥
-              </h2>
-              <p className="mt-2 text-base font-medium text-ink-600">
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0.4, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.34 }}
+                className="mt-2 text-base font-medium text-ink-600"
+              >
                 You + {match.others.map((id) => MEMBERS[id].name).join(" + ")} are into{" "}
                 {match.rest.name}
-              </p>
-              <div className="mt-4 flex justify-center">
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0.4, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.42 }}
+                className="mt-4 flex justify-center"
+              >
                 <AvatarStack ids={["ari", ...match.others]} size={40} />
-              </div>
-              <div className="mt-6">
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0.4, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.5 }}
+                className="mt-6"
+              >
                 <PrimaryButton full onClick={openPoll}>
                   Make it a poll →
                 </PrimaryButton>
-              </div>
-              <div className="mt-2 flex justify-center">
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0.4, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.58 }}
+                className="mt-2 flex justify-center"
+              >
                 <GhostButton onClick={() => setMatch(null)}>Keep swiping</GhostButton>
-              </div>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}

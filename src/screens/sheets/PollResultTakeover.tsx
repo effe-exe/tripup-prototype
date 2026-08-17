@@ -89,33 +89,53 @@ export default function PollResultTakeover() {
               initial={{ scale: 0.8, y: 24, opacity: 0 }}
               animate={
                 flown
-                  ? { scale: 0.22, y: 330, opacity: 0 }
+                  ? { scale: 0.6, y: 340, opacity: 0 }
                   : { scale: 1, y: 0, opacity: 1 }
               }
+              /* the winner drops into the plan with weight — overdamped, no bounce */
               transition={
                 flown
-                  ? { duration: 0.6, ease: [0.4, 0, 1, 1] }
-                  : { type: "spring", stiffness: 260, damping: 28, delay: 0.15 }
+                  ? { type: "spring", stiffness: 200, damping: 30 }
+                  : { type: "spring", stiffness: 260, damping: 30, delay: 0.15 }
               }
               className="w-full max-w-[300px] overflow-hidden rounded-3xl bg-paper-0 shadow-elev-3"
             >
               <img src={winner.photo} alt={winner.name} className="h-44 w-full object-cover" />
+              {/* headline → tally → runners-up, 80ms apart */}
               <div className="px-5 pb-5 pt-4 text-center">
-                <h2 className="text-[28px] font-extrabold leading-8 tracking-[-0.4px] text-ink-900">
+                <motion.h2
+                  initial={{ opacity: 0.4, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.28 }}
+                  className="text-[28px] font-extrabold leading-8 tracking-[-0.4px] text-ink-900"
+                >
                   {winner.name} wins! {WIN_EMOJI[winnerId] ?? "🎉"}
-                </h2>
-                <p className="mt-1 text-sm font-medium text-ink-600">
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0.4, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.36 }}
+                  className="mt-1 text-sm font-medium text-ink-600"
+                >
                   <span className="tabular">{winnerVotes}</span> of 6 votes
-                </p>
+                </motion.p>
                 <div className="mt-3 flex justify-center gap-2">
-                  {runners.map((o) => (
-                    <span
+                  {runners.map((o, i) => (
+                    <motion.span
                       key={o.restaurantId}
+                      initial={{ opacity: 0.4, y: 8, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 260,
+                        damping: 30,
+                        delay: 0.44 + i * 0.08,
+                      }}
                       className="rounded-full bg-paper-100 px-2.5 py-1 text-xs font-semibold text-ink-600"
                     >
                       {SHORT_NAME[o.restaurantId] ?? o.restaurantId}{" "}
                       <span className="tabular">{o.votes.length}</span>
-                    </span>
+                    </motion.span>
                   ))}
                 </div>
               </div>

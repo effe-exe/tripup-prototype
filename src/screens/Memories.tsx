@@ -163,12 +163,12 @@ export default function Memories() {
           </button>
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2">
-          {state.memories.map((m) => (
+          {state.memories.map((m, i) => (
             <motion.div
               key={m.id}
-              initial={{ opacity: 0.4, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: "spring", stiffness: 280, damping: 22 }}
+              initial={{ opacity: 0.4, scale: 0.82, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 30, delay: Math.min(i, 9) * 0.045 }}
               className="relative aspect-square overflow-hidden rounded-2xl"
             >
               <img src={m.photo} alt="" className="h-full w-full object-cover" />
@@ -178,6 +178,14 @@ export default function Memories() {
             </motion.div>
           ))}
           <motion.button
+            initial={{ opacity: 0.4, scale: 0.82, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 280,
+              damping: 30,
+              delay: Math.min(state.memories.length, 9) * 0.045,
+            }}
             whileTap={{ scale: 0.96 }}
             onClick={() => dispatch({ type: "ADD_MEMORY", photo: photos.tram })}
             className="flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-sunset-300 bg-sunset-50/60"
@@ -194,7 +202,7 @@ export default function Memories() {
               key={n.id}
               initial={{ opacity: 0.4, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              transition={{ type: "spring", stiffness: 280, damping: 30, delay: Math.min(i, 9) * 0.05 }}
               className="flex items-start gap-3 rounded-2xl bg-paper-0 p-4 shadow-elev-1"
             >
               <Avatar id={n.by} size={32} />

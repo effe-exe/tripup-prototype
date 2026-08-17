@@ -8,6 +8,7 @@ import {
   ScreenHeader,
   StatusBar,
 } from "../components/ui";
+import { rowEnter, tapCard } from "../components/motion";
 import { photos, RESTAURANTS } from "../data/mock";
 import type { ItineraryItem } from "../data/types";
 import { useStore } from "../state/store";
@@ -170,17 +171,20 @@ export default function TripHub() {
         {/* Itinerary — Today */}
         <p className="mb-3 mt-6 text-sm font-semibold text-ink-600">Today · Aug 17</p>
         <div className="flex flex-col gap-3">
-          {state.itinerary.map((it) =>
-            it.id === "it-dinner" ? (
-              <DinnerRow key="it-dinner" it={it} pollOpen={state.poll.status === "open"} onTap={onDinnerTap} />
-            ) : (
-              <DoneRow
-                key={it.id}
-                it={it}
-                onTap={() => dispatch({ type: "OPEN_SHEET", sheet: "itineraryDetail", payload: it.id })}
-              />
-            ),
-          )}
+          {state.itinerary.map((it, i) => (
+            /* mount-only entrance wrapper — the rows' own state-driven
+               layout/flip animations live one level down, untouched */
+            <motion.div key={it.id} {...rowEnter(i)}>
+              {it.id === "it-dinner" ? (
+                <DinnerRow it={it} pollOpen={state.poll.status === "open"} onTap={onDinnerTap} />
+              ) : (
+                <DoneRow
+                  it={it}
+                  onTap={() => dispatch({ type: "OPEN_SHEET", sheet: "itineraryDetail", payload: it.id })}
+                />
+              )}
+            </motion.div>
+          ))}
         </div>
 
         {/* Post-poll expense suggestion */}
@@ -204,12 +208,16 @@ export default function TripHub() {
         {/* Previous days — collapsed recaps */}
         <p className="mb-3 mt-7 text-sm font-semibold text-ink-600">Earlier this trip</p>
         <div className="flex flex-col gap-3">
-          {PREVIOUS_DAYS.map((day) => {
+          {PREVIOUS_DAYS.map((day, i) => {
             const expanded = expandedDay === day.id;
             return (
-              <div key={day.id} className="overflow-hidden rounded-2xl bg-paper-0 shadow-elev-1">
+              <motion.div
+                key={day.id}
+                {...rowEnter(i + state.itinerary.length)}
+                className="overflow-hidden rounded-2xl bg-paper-0 shadow-elev-1"
+              >
                 <motion.button
-                  whileTap={{ scale: 0.995 }}
+                  whileTap={tapCard}
                   onClick={() => setExpandedDay(expanded ? null : day.id)}
                   className="flex w-full items-center gap-3 p-3 text-left"
                 >
@@ -251,7 +259,7 @@ export default function TripHub() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -278,7 +286,7 @@ export default function TripHub() {
 function DoneRow({ it, onTap }: { it: ItineraryItem; onTap: () => void }) {
   return (
     <motion.button
-      whileTap={{ scale: 0.99 }}
+      whileTap={tapCard}
       onClick={onTap}
       className="flex w-full items-center gap-3 rounded-2xl bg-paper-0 p-3 text-left shadow-elev-1"
     >
@@ -316,6 +324,7 @@ function DinnerRow({
             layout
             exit={{ opacity: 0.4, scale: 0.98 }}
             transition={spring}
+            whileTap={tapCard}
             onClick={onTap}
             className="flex w-full items-center gap-3 rounded-2xl border-[1.5px] border-dashed border-line-300 p-3 text-left"
           >
@@ -338,6 +347,7 @@ function DinnerRow({
             initial={{ opacity: 0, y: 14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={spring}
+            whileTap={tapCard}
             onClick={onTap}
             className="w-full rounded-2xl bg-paper-0 p-3 text-left shadow-elev-2"
           >

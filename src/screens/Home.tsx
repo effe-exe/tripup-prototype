@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ChevronRight, Plus } from "lucide-react";
 import { Avatar, AvatarStack, HomeIndicator, StatusBar } from "../components/ui";
+import { rowEnter, tapCard } from "../components/motion";
 import { TRIP } from "../data/mock";
 import { useStore } from "../state/store";
 
@@ -41,7 +42,8 @@ export default function Home() {
         {/* Live trip hero card (~60% viewport) */}
         <div className="px-5">
           <motion.button
-            whileTap={{ scale: 0.99 }}
+            {...rowEnter(0)}
+            whileTap={tapCard}
             onClick={() => dispatch({ type: "OPEN_TRIP" })}
             className="relative block h-[470px] w-full overflow-hidden rounded-[24px] text-left shadow-elev-2"
           >
@@ -86,10 +88,11 @@ export default function Home() {
         <div className="mt-7 px-5">
           <h2 className="mb-3 text-lg font-bold text-ink-900">Up next</h2>
           <div className="flex gap-3 overflow-x-auto">
-            {UP_NEXT.map((t) => (
+            {UP_NEXT.map((t, i) => (
               <motion.button
                 key={t.id}
-                whileTap={{ scale: 0.98 }}
+                {...rowEnter(i + 1)}
+                whileTap={tapCard}
                 onClick={() =>
                   t.id === "ibiza"
                     ? dispatch({ type: "PUSH_BANNER", emoji: "☀️", text: "Ibiza Sept starts in 25 days" })
@@ -110,7 +113,8 @@ export default function Home() {
         {/* Past trips */}
         <div className="mt-5 px-5">
           <motion.button
-            whileTap={{ scale: 0.99 }}
+            {...rowEnter(3)}
+            whileTap={tapCard}
             onClick={() => dispatch({ type: "OPEN_MEMORIES" })}
             className="flex w-full items-center justify-between rounded-2xl bg-paper-0 px-4 py-4 shadow-elev-1"
           >

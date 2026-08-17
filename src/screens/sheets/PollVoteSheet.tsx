@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, BottomSheet, GhostButton } from "../../components/ui";
+import { rowEnter, tapCard } from "../../components/motion";
 import { RESTAURANTS, useStore } from "../../state/store";
 
 const TOTAL_VOTERS = 6;
@@ -41,13 +42,15 @@ export default function PollVoteSheet() {
 
           {/* Option rows */}
           <div className="mt-4 space-y-3">
-            {options.map((o) => {
+            {options.map((o, i) => {
               const rest = RESTAURANTS.find((r) => r.id === o.restaurantId)!;
               const leading = o.restaurantId === leaderId;
               const mine = o.votes.includes("ari");
               return (
-                <button
+                <motion.button
                   key={o.restaurantId}
+                  {...rowEnter(i, 0.06)}
+                  whileTap={tapCard}
                   onClick={() =>
                     dispatch({ type: "VOTE", member: "ari", restaurantId: o.restaurantId })
                   }
@@ -90,7 +93,7 @@ export default function PollVoteSheet() {
                           }`}
                           initial={{ width: 0 }}
                           animate={{ width: `${(o.votes.length / TOTAL_VOTERS) * 100}%` }}
-                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                          transition={{ type: "spring", stiffness: 260, damping: 30 }}
                         />
                       </div>
                       {/* Voter chips fly in */}
@@ -100,10 +103,10 @@ export default function PollVoteSheet() {
                             {o.votes.map((v) => (
                               <motion.span
                                 key={v}
-                                initial={{ scale: 0.4, opacity: 0 }}
+                                initial={{ scale: 0.5, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.4, opacity: 0 }}
-                                transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                                exit={{ scale: 0.5, opacity: 0 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 26 }}
                               >
                                 <Avatar id={v} size={20} ring />
                               </motion.span>
@@ -123,7 +126,7 @@ export default function PollVoteSheet() {
                       {mine ? "✓" : ""}
                     </span>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -141,7 +144,7 @@ export default function PollVoteSheet() {
                 className="h-full rounded-full bg-sunset-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${(voteCount / TOTAL_VOTERS) * 100}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30 }}
               />
             </div>
           </div>
