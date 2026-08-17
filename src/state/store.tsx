@@ -264,8 +264,16 @@ const StoreCtx = createContext<Ctx | null>(null);
  * Every simulated event is triggered by a user action, never by wall-clock —
  * the demo cannot soft-lock.
  */
+function loggingReducer(s: State, a: Action): State {
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((window as any).__actions ??= []).push(a.type + (a.type === "OPEN_SHEET" ? ":" + (a as { sheet: Sheet }).sheet : ""));
+  }
+  return reducer(s, a);
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(loggingReducer, initialState);
   const timers = useRef<number[]>([]);
   const ranRef = useRef<Set<string>>(new Set());
 
@@ -357,6 +365,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const balances = computeBalances(state.expenses);
   const iousBefore = pairwiseIouCount(state.expenses);
+
+  // Dev-only hook for automated walkthrough testing
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__tripup = { state, dispatch, balances, iousBefore, voteCount };
+  }
 
   return (
     <StoreCtx.Provider value={{ state, dispatch, balances, iousBefore, voteCount }}>

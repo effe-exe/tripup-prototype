@@ -136,7 +136,7 @@ export default function TripHub() {
         </AnimatePresence>
 
         {/* Itinerary — Today */}
-        <p className="mb-3 mt-6 text-sm font-semibold text-ink-600">Today · Sun, Aug 17</p>
+        <p className="mb-3 mt-6 text-sm font-semibold text-ink-600">Today · Aug 17</p>
         <div className="flex flex-col gap-3">
           {state.itinerary.map((it) =>
             it.id === "it-dinner" ? (
