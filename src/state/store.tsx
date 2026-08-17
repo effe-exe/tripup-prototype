@@ -1,0 +1,363 @@
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useEffect, useReducer, useRef } from "react";
+import type {
+  BuzzEvent,
+  Expense,
+  ItineraryItem,
+  MemberId,
+  Memory,
+  Poll,
+  Transfer,
+  TripNote,
+} from "../data/types";
+import {
+  MEMBERS,
+  RESTAURANTS,
+  dinnerExpense,
+  initialBuzz,
+  initialExpenses,
+  initialItinerary,
+  initialMemories,
+  initialNotes,
+  initialPoll,
+} from "../data/mock";
+import { computeBalances, minimizeTransfers, pairwiseIouCount } from "../data/balances";
+
+/** Navigation model: root (home) OR trip context with tabs; sheets overlay. */
+export type Tab = "hub" | "swipe" | "split" | "buzz";
+export type Sheet =
+  | null
+  | "addMember"
+  | "createPoll"
+  | "pollVote"
+  | "addExpense"
+  | "settle"
+  | "quickActions"
+  | "pollResult"
+  | "note";
+export type Screen = "home" | "trip" | "memories";
+
+export interface Banner {
+  id: number;
+  emoji: string;
+  text: string;
+}
+
+export interface SwipeState {
+  index: number;
+  liked: string[]; // restaurant ids Ari liked
+  passed: string[];
+  /** group matches: restaurantId -> member ids who liked it (Maya/Zoe pre-seeded by script) */
+  matches: Record<string, MemberId[]>;
+}
+
+interface State {
+  screen: Screen;
+  tab: Tab;
+  sheet: Sheet;
+  renJoined: boolean;
+  members: MemberId[]; // in display order
+  poll: Poll;
+  itinerary: ItineraryItem[];
+  expenses: Expense[];
+  transfers: Transfer[];
+  splitSegment: "expenses" | "balances";
+  buzz: BuzzEvent[];
+  banners: Banner[];
+  swipe: SwipeState;
+  memories: Memory[];
+  notes: TripNote[];
+  settleStarted: boolean;
+  allSquare: boolean;
+  wrapSeen: boolean;
+}
+
+const initialState: State = {
+  screen: "home",
+  tab: "hub",
+  sheet: null,
+  renJoined: false,
+  members: ["ari", "nic", "maya", "tomas", "zoe"],
+  poll: initialPoll,
+  itinerary: initialItinerary,
+  expenses: initialExpenses,
+  transfers: [],
+  splitSegment: "expenses",
+  buzz: initialBuzz,
+  banners: [],
+  swipe: {
+    index: 0,
+    liked: [],
+    passed: [],
+    matches: { marealta: ["maya", "zoe"], terraco: ["maya"] },
+  },
+  memories: initialMemories,
+  notes: initialNotes,
+  settleStarted: false,
+  allSquare: false,
+  wrapSeen: false,
+};
+
+type Action =
+  | { type: "NAV_HOME" }
+  | { type: "OPEN_TRIP" }
+  | { type: "SET_TAB"; tab: Tab }
+  | { type: "OPEN_SHEET"; sheet: Sheet }
+  | { type: "CLOSE_SHEET" }
+  | { type: "OPEN_MEMORIES" }
+  | { type: "REN_JOINS" }
+  | { type: "SWIPE"; dir: "like" | "pass" }
+  | { type: "SEND_POLL" }
+  | { type: "VOTE"; member: MemberId; restaurantId: string }
+  | { type: "CLOSE_POLL" }
+  | { type: "ADD_DINNER_EXPENSE" }
+  | { type: "START_SETTLE" }
+  | { type: "MARK_PAID"; from: MemberId }
+  | { type: "SET_SPLIT_SEGMENT"; segment: "expenses" | "balances" }
+  | { type: "PUSH_BANNER"; emoji: string; text: string }
+  | { type: "POP_BANNER"; id: number }
+  | { type: "PUSH_BUZZ"; icon: BuzzEvent["icon"]; text: string; time: string }
+  | { type: "ADD_MEMORY"; photo: string }
+  | { type: "ADD_NOTE"; text: string }
+  | { type: "MARK_WRAP_SEEN" };
+
+let bannerId = 1;
+let buzzId = 100;
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "NAV_HOME":
+      return { ...state, screen: "home", sheet: null };
+    case "OPEN_TRIP":
+      return { ...state, screen: "trip", tab: "hub", sheet: null };
+    case "SET_TAB":
+      return { ...state, tab: action.tab, sheet: null };
+    case "OPEN_SHEET":
+      return { ...state, sheet: action.sheet };
+    case "CLOSE_SHEET":
+      return { ...state, sheet: null };
+    case "OPEN_MEMORIES":
+      return { ...state, screen: "memories", sheet: null };
+    case "REN_JOINS":
+      if (state.renJoined) return state;
+      return { ...state, renJoined: true, members: [...state.members, "ren"] };
+    case "SWIPE": {
+      const rest = RESTAURANTS[state.swipe.index];
+      if (!rest) return state;
+      const swipe = { ...state.swipe, index: state.swipe.index + 1 };
+      if (action.dir === "like") {
+        swipe.liked = [...swipe.liked, rest.id];
+        const prev = swipe.matches[rest.id] ?? [];
+        swipe.matches = { ...swipe.matches, [rest.id]: prev };
+      } else {
+        swipe.passed = [...swipe.passed, rest.id];
+      }
+      return { ...state, swipe };
+    }
+    case "SEND_POLL":
+      return { ...state, sheet: null, poll: { ...state.poll, status: "open" } };
+    case "VOTE": {
+      if (state.poll.status !== "open") return state;
+      const options = state.poll.options.map((o) => ({
+        ...o,
+        votes: o.votes.filter((v) => v !== action.member),
+      }));
+      const target = options.find((o) => o.restaurantId === action.restaurantId);
+      if (target) target.votes = [...target.votes, action.member];
+      return { ...state, poll: { ...state.poll, options } };
+    }
+    case "CLOSE_POLL": {
+      if (state.poll.status !== "open") return state;
+      const winner = [...state.poll.options].sort((a, b) => b.votes.length - a.votes.length)[0];
+      const rest = RESTAURANTS.find((r) => r.id === winner.restaurantId)!;
+      const itinerary = state.itinerary.map((it) =>
+        it.id === "it-dinner"
+          ? {
+              ...it,
+              title: rest.name,
+              subtitle: "Cais do Sodré · 900 m · from poll",
+              photo: rest.photo,
+              state: "planned" as const,
+              fromPollId: state.poll.id,
+            }
+          : it,
+      );
+      return {
+        ...state,
+        poll: { ...state.poll, status: "closed", winnerId: winner.restaurantId },
+        itinerary,
+        sheet: "pollResult",
+      };
+    }
+    case "ADD_DINNER_EXPENSE": {
+      if (state.expenses.some((e) => e.id === "e-dinner")) return { ...state, sheet: null };
+      return {
+        ...state,
+        sheet: null,
+        tab: "split",
+        splitSegment: "balances",
+        expenses: [...state.expenses, dinnerExpense],
+        transfers: minimizeTransfers(computeBalances([...state.expenses, dinnerExpense])),
+      };
+    }
+    case "START_SETTLE":
+      return { ...state, settleStarted: true, sheet: "settle" };
+    case "MARK_PAID": {
+      const transfers = state.transfers.map((t) =>
+        t.from === action.from ? { ...t, status: "paid" as const } : t,
+      );
+      const allSquare = transfers.every((t) => t.status === "paid");
+      return { ...state, transfers, allSquare };
+    }
+    case "SET_SPLIT_SEGMENT":
+      return { ...state, splitSegment: action.segment };
+    case "PUSH_BANNER":
+      return {
+        ...state,
+        banners: [...state.banners.slice(-1), { id: bannerId++, emoji: action.emoji, text: action.text }],
+      };
+    case "POP_BANNER":
+      return { ...state, banners: state.banners.filter((b) => b.id !== action.id) };
+    case "PUSH_BUZZ":
+      return {
+        ...state,
+        buzz: [{ id: "b" + buzzId++, icon: action.icon, text: action.text, time: action.time }, ...state.buzz],
+      };
+    case "ADD_MEMORY":
+      return {
+        ...state,
+        memories: [...state.memories, { id: "m" + Date.now(), photo: action.photo, by: "ari" }],
+      };
+    case "ADD_NOTE":
+      return { ...state, sheet: null, notes: [...state.notes, { id: "n" + Date.now(), by: "ari", text: action.text }] };
+    case "MARK_WRAP_SEEN":
+      return { ...state, wrapSeen: true };
+    default:
+      return state;
+  }
+}
+
+interface Ctx {
+  state: State;
+  dispatch: React.Dispatch<Action>;
+  /** derived */
+  balances: Record<MemberId, number>;
+  iousBefore: number;
+  voteCount: number;
+}
+
+const StoreCtx = createContext<Ctx | null>(null);
+
+/**
+ * Deterministic demo timeline (§4.3 of the UX spec).
+ * Every simulated event is triggered by a user action, never by wall-clock —
+ * the demo cannot soft-lock.
+ */
+export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const timers = useRef<number[]>([]);
+  const ranRef = useRef<Set<string>>(new Set());
+
+  const once = (key: string, fn: () => void) => {
+    if (ranRef.current.has(key)) return;
+    ranRef.current.add(key);
+    fn();
+  };
+  const after = (ms: number, fn: () => void) => {
+    timers.current.push(window.setTimeout(fn, ms));
+  };
+
+  // Ren joins ~3s after the invite sheet is opened
+  useEffect(() => {
+    if (state.sheet === "addMember" && !state.renJoined) {
+      once("ren", () =>
+        after(3000, () => {
+          dispatch({ type: "REN_JOINS" });
+          dispatch({ type: "PUSH_BANNER", emoji: "👋", text: "Ren joined the trip — dinner-only" });
+          dispatch({ type: "PUSH_BUZZ", icon: "join", text: "Ren joined the trip", time: "19:52" });
+        }),
+      );
+    }
+  }, [state.sheet, state.renJoined]);
+
+  // Scripted votes after the poll is sent
+  useEffect(() => {
+    if (state.poll.status === "open") {
+      once("votes", () => {
+        after(2000, () => dispatch({ type: "VOTE", member: "nic", restaurantId: "vintem" }));
+        after(4000, () => {
+          dispatch({ type: "VOTE", member: "maya", restaurantId: "marealta" });
+          dispatch({ type: "VOTE", member: "tomas", restaurantId: "terraco" });
+        });
+        after(7000, () => dispatch({ type: "VOTE", member: "zoe", restaurantId: "marealta" }));
+        after(10000, () => dispatch({ type: "VOTE", member: "ren", restaurantId: "marealta" }));
+      });
+    }
+  }, [state.poll.status]);
+
+  // Auto-close at 6/6 (waits for Ari's own vote — presenter can't be skipped)
+  const voteCount = state.poll.options.reduce((n, o) => n + o.votes.length, 0);
+  useEffect(() => {
+    if (state.poll.status === "open" && voteCount >= 6) {
+      once("close", () =>
+        after(1500, () => {
+          dispatch({ type: "CLOSE_POLL" });
+          dispatch({ type: "PUSH_BANNER", emoji: "🗳", text: "Maré Alta won — added to tonight, 20:45" });
+          dispatch({ type: "PUSH_BUZZ", icon: "poll", text: "Poll closed: Maré Alta won 4–1–1", time: "20:15" });
+        }),
+      );
+    }
+  }, [voteCount, state.poll.status]);
+
+  // Settle: friends pay one by one once the settle board is open
+  useEffect(() => {
+    if (state.settleStarted) {
+      once("settle", () => {
+        after(3000, () => {
+          dispatch({ type: "MARK_PAID", from: "ren" });
+          dispatch({ type: "PUSH_BUZZ", icon: "money", text: "Ren paid Nic €23.00", time: "23:41" });
+        });
+        after(6000, () => {
+          dispatch({ type: "MARK_PAID", from: "tomas" });
+          dispatch({ type: "PUSH_BUZZ", icon: "money", text: "Tomás paid Nic €96.00", time: "23:44" });
+        });
+        after(9000, () => {
+          dispatch({ type: "MARK_PAID", from: "zoe" });
+          dispatch({ type: "PUSH_BUZZ", icon: "money", text: "Zoe paid Nic €126.00", time: "23:47" });
+        });
+        after(12000, () => {
+          dispatch({ type: "MARK_PAID", from: "maya" });
+          dispatch({ type: "PUSH_BANNER", emoji: "🏁", text: "Everyone's square — that's a wrap!" });
+          dispatch({ type: "PUSH_BUZZ", icon: "money", text: "Maya paid Nic €141.00 — all settled", time: "23:52" });
+        });
+      });
+    }
+  }, [state.settleStarted]);
+
+  // Auto-dismiss banners after 4s
+  useEffect(() => {
+    if (state.banners.length) {
+      const b = state.banners[state.banners.length - 1];
+      after(4000, () => dispatch({ type: "POP_BANNER", id: b.id }));
+    }
+  }, [state.banners]);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  const balances = computeBalances(state.expenses);
+  const iousBefore = pairwiseIouCount(state.expenses);
+
+  return (
+    <StoreCtx.Provider value={{ state, dispatch, balances, iousBefore, voteCount }}>
+      {children}
+    </StoreCtx.Provider>
+  );
+}
+
+export function useStore(): Ctx {
+  const ctx = useContext(StoreCtx);
+  if (!ctx) throw new Error("useStore outside provider");
+  return ctx;
+}
+
+export { MEMBERS, RESTAURANTS };

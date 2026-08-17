@@ -1,0 +1,68 @@
+@import "tailwindcss";
+@import "@fontsource-variable/figtree";
+
+@theme {
+  /* TripUp design tokens — mirrors Figma "Color" variable collection */
+  --color-sunset-50: #FFF1EE;
+  --color-sunset-100: #FFE1DB;
+  --color-sunset-300: #FF9C8A;
+  --color-sunset-500: #FF5A45;
+  --color-sunset-600: #F04430;
+  --color-sunset-700: #C4331F;
+  --color-lagoon-50: #EFFAF8;
+  --color-lagoon-500: #0E9384;
+  --color-lagoon-700: #0B7566;
+  --color-golden-50: #FFF7E8;
+  --color-golden-400: #FFB43A;
+  --color-paper-0: #FFFFFF;
+  --color-paper-50: #FAF9F7;
+  --color-paper-100: #F4F2EE;
+  --color-line-200: #E9E5DF;
+  --color-line-300: #D7D2C9;
+  --color-ink-400: #A39D93;
+  --color-ink-500: #767066;
+  --color-ink-600: #57524B;
+  --color-ink-900: #1C1917;
+  --color-success-50: #EDFAF2;
+  --color-success-600: #178A50;
+  --color-warning-50: #FFF6E0;
+  --color-warning-700: #9A6700;
+  --color-error-50: #FEF0EF;
+  --color-error-600: #D92D20;
+
+  --font-sans: "Figtree Variable", Figtree, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+
+  --shadow-elev-1: 0 1px 2px rgba(28, 25, 23, 0.06);
+  --shadow-elev-2: 0 2px 8px rgba(28, 25, 23, 0.08);
+  --shadow-elev-3: 0 8px 24px rgba(28, 25, 23, 0.12);
+  --shadow-elev-sheet: 0 -8px 32px rgba(28, 25, 23, 0.14);
+}
+
+html,
+body {
+  background: #1C1917;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Money amounts always tabular */
+.tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Gentle motion only — respect reduced motion (hard accessibility rule) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+}
