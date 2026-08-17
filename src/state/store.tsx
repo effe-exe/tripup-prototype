@@ -70,6 +70,7 @@ interface State {
   settleStarted: boolean;
   allSquare: boolean;
   wrapSeen: boolean;
+  buzzUnread: number;
 }
 
 const initialState: State = {
@@ -96,6 +97,7 @@ const initialState: State = {
   settleStarted: false,
   allSquare: false,
   wrapSeen: false,
+  buzzUnread: 3,
 };
 
 type Action =
@@ -131,7 +133,7 @@ function reducer(state: State, action: Action): State {
     case "OPEN_TRIP":
       return { ...state, screen: "trip", tab: "hub", sheet: null };
     case "SET_TAB":
-      return { ...state, tab: action.tab, sheet: null };
+      return { ...state, tab: action.tab, sheet: null, buzzUnread: action.tab === "buzz" ? 0 : state.buzzUnread };
     case "OPEN_SHEET":
       return { ...state, sheet: action.sheet };
     case "CLOSE_SHEET":
@@ -191,8 +193,16 @@ function reducer(state: State, action: Action): State {
     }
     case "ADD_DINNER_EXPENSE": {
       if (state.expenses.some((e) => e.id === "e-dinner")) return { ...state, sheet: null };
+      const dinnerBuzz: BuzzEvent = {
+        id: "b" + buzzId++,
+        icon: "money",
+        text: "Ari added Dinner @ Maré Alta · €186.00",
+        time: "23:12",
+      };
       return {
         ...state,
+        buzz: [dinnerBuzz, ...state.buzz],
+        buzzUnread: state.buzzUnread + 1,
         sheet: null,
         tab: "split",
         splitSegment: "balances",
@@ -222,6 +232,7 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         buzz: [{ id: "b" + buzzId++, icon: action.icon, text: action.text, time: action.time }, ...state.buzz],
+        buzzUnread: state.tab === "buzz" ? 0 : state.buzzUnread + 1,
       };
     case "ADD_MEMORY":
       return {

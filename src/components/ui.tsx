@@ -209,6 +209,7 @@ export function Segmented<T extends string>({
   value: T;
   onChange: (v: T) => void;
 }) {
+  const layoutId = React.useId();
   return (
     <div className="flex rounded-full bg-paper-100 p-1">
       {options.map((o) => (
@@ -221,7 +222,7 @@ export function Segmented<T extends string>({
         >
           {value === o.value && (
             <motion.span
-              layoutId="seg"
+              layoutId={layoutId}
               className="absolute inset-0 rounded-full bg-sunset-500"
               transition={{ type: "spring", stiffness: 400, damping: 34 }}
             />
@@ -303,7 +304,7 @@ export function ScreenHeader({
 
 export function TabBar() {
   const { state, dispatch } = useStore();
-  const buzzUnread = 0; // badge driven by store if needed
+  const buzzUnread = state.buzzUnread;
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "hub", label: "Hub", icon: <Home size={24} strokeWidth={1.75} /> },
     { key: "swipe", label: "Swipe", icon: <Layers size={24} strokeWidth={1.75} /> },
