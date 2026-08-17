@@ -9,6 +9,14 @@ import { Avatar, HomeIndicator, StatusBar } from "../components/ui";
 
 const WRAP_AVATARS: MemberId[] = ["ari", "nic", "maya", "tomas", "zoe", "ren"];
 
+/** Trip superlatives — identity tokens, no streaks (UX retention spec §5). */
+const SUPERLATIVES = [
+  { emoji: "⚡", label: "First to vote", who: "Zoe" },
+  { emoji: "💳", label: "Wallet hero", who: "Nic" },
+  { emoji: "🔮", label: "Vibe curator", who: "Maya" },
+  { emoji: "📸", label: "Paparazzo", who: "Tomás" },
+];
+
 function SettledDisc({ id }: { id: MemberId }) {
   const m = MEMBERS[id];
   return (
@@ -75,6 +83,22 @@ export default function Memories() {
           </div>
         </div>
 
+        {/* Trip superlatives — streak-free identity tokens (UX retention spec §5) */}
+        <div
+          className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-0.5"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {SUPERLATIVES.map((s) => (
+            <span
+              key={s.label}
+              className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-line-200 bg-paper-0 px-3.5 text-[13px] font-semibold text-ink-600 shadow-elev-1"
+            >
+              <span>{s.emoji}</span>
+              {s.label} — {s.who}
+            </span>
+          ))}
+        </div>
+
         {/* The Lisboa film */}
         <div className="mt-4 rounded-2xl bg-paper-0 p-3.5 shadow-elev-1">
           <div className="flex items-center gap-3">
@@ -109,6 +133,7 @@ export default function Memories() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 24 }}
                 whileTap={{ scale: 0.96 }}
+                onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "film" })}
                 className="h-9 shrink-0 rounded-full bg-sunset-500 px-4 text-sm font-semibold text-white active:bg-sunset-600"
               >
                 Watch
@@ -130,7 +155,12 @@ export default function Memories() {
         {/* Memories grid */}
         <div className="mt-4 flex items-baseline justify-between px-0.5">
           <p className="tabular text-[13px] font-bold text-ink-900">Memories · {photoCount} photos</p>
-          <button className="text-[13px] font-semibold text-sunset-700">See all →</button>
+          <button
+            onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "allMemories" })}
+            className="text-[13px] font-semibold text-sunset-700"
+          >
+            See all →
+          </button>
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2">
           {state.memories.map((m) => (

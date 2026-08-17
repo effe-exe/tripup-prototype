@@ -29,7 +29,12 @@ export default function Home() {
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between px-5 pb-2 pt-1">
         <h1 className="text-[26px] font-extrabold tracking-[-0.4px] text-ink-900">Hey Ari 👋</h1>
-        <Avatar id="ari" size={40} />
+        <motion.button
+          whileTap={{ scale: 0.94 }}
+          onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "profile" })}
+        >
+          <Avatar id="ari" size={40} />
+        </motion.button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto pb-24">
@@ -82,13 +87,22 @@ export default function Home() {
           <h2 className="mb-3 text-lg font-bold text-ink-900">Up next</h2>
           <div className="flex gap-3 overflow-x-auto">
             {UP_NEXT.map((t) => (
-              <div key={t.id} className="w-[172px] shrink-0 rounded-2xl bg-paper-0 p-3 shadow-elev-1">
+              <motion.button
+                key={t.id}
+                whileTap={{ scale: 0.98 }}
+                onClick={() =>
+                  t.id === "ibiza"
+                    ? dispatch({ type: "PUSH_BANNER", emoji: "☀️", text: "Ibiza Sept starts in 25 days" })
+                    : dispatch({ type: "OPEN_SHEET", sheet: "newTrip" })
+                }
+                className="w-[172px] shrink-0 rounded-2xl bg-paper-0 p-3 text-left shadow-elev-1"
+              >
                 <div className="flex h-24 items-center justify-center rounded-xl bg-paper-100 text-3xl">
                   {t.emoji}
                 </div>
                 <p className="mt-2.5 text-[15px] font-bold text-ink-900">{t.name}</p>
                 <p className="text-xs font-medium text-ink-500">{t.meta}</p>
-              </div>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -110,6 +124,7 @@ export default function Home() {
       <motion.button
         whileTap={{ scale: 0.96 }}
         transition={spring}
+        onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "newTrip" })}
         className="absolute bottom-9 right-5 z-20 flex h-13 items-center gap-1.5 rounded-full bg-sunset-500 px-5 font-semibold text-white shadow-elev-3"
         style={{ height: 52 }}
       >

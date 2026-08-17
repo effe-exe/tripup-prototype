@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import {
+  ChevronRight,
   Home as HomeIcon,
   Receipt,
   ShoppingBag,
@@ -48,11 +49,14 @@ function Num({ value, className }: { value: string; className?: string }) {
   );
 }
 
-function ExpenseRow({ e }: { e: Expense }) {
+function ExpenseRow({ e, onOpen }: { e: Expense; onOpen: () => void }) {
   const Icon = EXPENSE_ICONS[e.id] ?? Receipt;
   const isDinner = e.id === "e-dinner";
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-paper-0 p-3.5 shadow-elev-1">
+    <button
+      onClick={onOpen}
+      className="flex w-full items-center gap-3 rounded-2xl bg-paper-0 p-3.5 text-left shadow-elev-1 active:bg-paper-100"
+    >
       <div
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
           isDinner ? "bg-sunset-50 text-sunset-700" : "bg-paper-100 text-ink-600"
@@ -72,13 +76,15 @@ function ExpenseRow({ e }: { e: Expense }) {
         )}
       </div>
       <span className="tabular text-[15px] font-bold text-ink-900">{fmtEUR(e.amount)}</span>
-    </div>
+      <ChevronRight size={16} strokeWidth={2.25} className="-ml-1.5 shrink-0 text-ink-400" />
+    </button>
   );
 }
 
 export default function SplitTab() {
   const { state, dispatch, balances, iousBefore } = useStore();
   const [showMath, setShowMath] = useState(false);
+  const [openMember, setOpenMember] = useState<MemberId | null>(null);
 
   const tripTotal = state.expenses.reduce((s, e) => s + e.amount, 0);
   const bal = (id: MemberId) => balances[id] ?? 0;
@@ -121,7 +127,11 @@ export default function SplitTab() {
         {state.splitSegment === "expenses" ? (
           <div className="flex flex-col gap-2.5">
             {newestFirst.map((e) => (
-              <ExpenseRow key={e.id} e={e} />
+              <ExpenseRow
+                key={e.id}
+                e={e}
+                onOpen={() => dispatch({ type: "OPEN_SHEET", sheet: "expenseDetail", payload: e.id })}
+              />
             ))}
           </div>
         ) : (
@@ -143,39 +153,118 @@ export default function SplitTab() {
                 {sorted.map((id) => {
                   const v = bal(id);
                   const zero = Math.abs(v) < 0.005;
+                  const isOpen = openMember === id;
+                  const paid = state.expenses.filter((e) => e.paidBy === id);
+                  const owed = state.expenses
+                    .map((e) => ({ e, share: expenseShares(e)[id] ?? 0 }))
+                    .filter((r) => r.share > 0.005);
                   return (
-                    <div key={id} className="flex items-center gap-2.5">
-                      <Avatar id={id} size={36} />
-                      <span className="w-14 shrink-0 truncate text-sm font-semibold text-ink-900">
-                        {MEMBERS[id].name}
-                      </span>
-                      {MEMBERS[id].guest && (
-                        <span className="shrink-0 rounded-full bg-paper-100 px-2 py-0.5 text-[10px] font-semibold text-ink-500">
-                          guest
+                    <div key={id}>
+                      <button
+                        onClick={() => setOpenMember(isOpen ? null : id)}
+                        className="flex w-full items-center gap-2.5 text-left"
+                      >
+                        <Avatar id={id} size={36} />
+                        <span className="w-14 shrink-0 truncate text-sm font-semibold text-ink-900">
+                          {MEMBERS[id].name}
                         </span>
-                      )}
-                      <div className="flex-1">
-                        {!zero && (
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.max((Math.abs(v) / maxAbs) * 100, 8)}%` }}
-                            transition={{ type: "spring", stiffness: 160, damping: 26 }}
-                            className={`h-2 rounded-full ${v > 0 ? "bg-lagoon-500" : "bg-sunset-500"}`}
+                        {MEMBERS[id].guest && (
+                          <span className="shrink-0 rounded-full bg-paper-100 px-2 py-0.5 text-[10px] font-semibold text-ink-500">
+                            guest
+                          </span>
+                        )}
+                        <div className="flex-1">
+                          {!zero && (
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.max((Math.abs(v) / maxAbs) * 100, 8)}%` }}
+                              transition={{ type: "spring", stiffness: 160, damping: 26 }}
+                              className={`h-2 rounded-full ${v > 0 ? "bg-lagoon-500" : "bg-sunset-500"}`}
+                            />
+                          )}
+                        </div>
+                        {zero ? (
+                          <span className="tabular shrink-0 text-sm font-semibold text-ink-400">
+                            €0 ✓
+                          </span>
+                        ) : (
+                          <Num
+                            value={`${v < 0 ? "−" : "+"}${fmtEUR(Math.abs(v))}`}
+                            className={`shrink-0 text-sm font-bold ${
+                              v < 0 ? "text-error-600" : "text-lagoon-700"
+                            }`}
                           />
                         )}
-                      </div>
-                      {zero ? (
-                        <span className="tabular shrink-0 text-sm font-semibold text-ink-400">
-                          €0 ✓
-                        </span>
-                      ) : (
-                        <Num
-                          value={`${v < 0 ? "−" : "+"}${fmtEUR(Math.abs(v))}`}
-                          className={`shrink-0 text-sm font-bold ${
-                            v < 0 ? "text-error-600" : "text-lagoon-700"
-                          }`}
-                        />
-                      )}
+                      </button>
+                      {/* Inline contribution mini-list — one open at a time */}
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0.4 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0.4 }}
+                            transition={{ type: "spring", stiffness: 220, damping: 30 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pt-2">
+                              <div className="ml-[46px] rounded-2xl bg-paper-50 px-3.5 py-3">
+                                {paid.length > 0 && (
+                                  <>
+                                    <p className="text-[11px] font-bold text-ink-400">Paid</p>
+                                    {paid.map((e) => (
+                                      <div
+                                        key={e.id}
+                                        className="mt-1 flex items-baseline justify-between gap-2"
+                                      >
+                                        <span className="min-w-0 truncate text-xs font-medium text-ink-600">
+                                          {e.title}
+                                        </span>
+                                        <span className="tabular shrink-0 text-xs font-semibold text-lagoon-700">
+                                          +{fmtEUR(e.amount)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </>
+                                )}
+                                <p
+                                  className={`text-[11px] font-bold text-ink-400 ${
+                                    paid.length ? "mt-2.5" : ""
+                                  }`}
+                                >
+                                  {id === "ari" ? "Your share" : "Their share"}
+                                </p>
+                                {owed.map(({ e, share }) => (
+                                  <div
+                                    key={e.id}
+                                    className="mt-1 flex items-baseline justify-between gap-2"
+                                  >
+                                    <span className="min-w-0 truncate text-xs font-medium text-ink-600">
+                                      {e.title}
+                                    </span>
+                                    <span className="tabular shrink-0 text-xs font-semibold text-ink-600">
+                                      −{fmtEUR(share)}
+                                    </span>
+                                  </div>
+                                ))}
+                                <div className="mt-2.5 flex items-baseline justify-between border-t border-line-200 pt-2">
+                                  <span className="text-xs font-semibold text-ink-600">Net</span>
+                                  <span
+                                    className={`tabular text-xs font-bold ${
+                                      zero
+                                        ? "text-ink-400"
+                                        : v < 0
+                                          ? "text-error-600"
+                                          : "text-lagoon-700"
+                                    }`}
+                                  >
+                                    {zero ? "€0.00 ✓" : `${v < 0 ? "−" : "+"}${fmtEUR(Math.abs(v))}`}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   );
                 })}

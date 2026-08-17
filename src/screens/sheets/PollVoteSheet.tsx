@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, BottomSheet, GhostButton } from "../../components/ui";
 import { RESTAURANTS, useStore } from "../../state/store";
@@ -7,6 +8,13 @@ const TOTAL_VOTERS = 6;
 export default function PollVoteSheet() {
   const { state, dispatch, voteCount } = useStore();
   const { options } = state.poll;
+  const [poked, setPoked] = useState(false);
+
+  const poke = () => {
+    if (poked) return;
+    setPoked(true);
+    dispatch({ type: "PUSH_BANNER", emoji: "👉", text: "Gentle poke sent to 2 friends" });
+  };
 
   const max = Math.max(...options.map((o) => o.votes.length));
   const leaderId =
@@ -137,6 +145,23 @@ export default function PollVoteSheet() {
               />
             </div>
           </div>
+
+          {/* Poke the not-yet-voted — once, then rests */}
+          {voteCount < TOTAL_VOTERS && (
+            <div className="mt-2.5 flex justify-center">
+              <button
+                disabled={poked}
+                onClick={poke}
+                className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-colors ${
+                  poked
+                    ? "bg-paper-100 text-ink-400"
+                    : "border border-line-300 bg-paper-0 text-ink-600 active:bg-paper-100"
+                }`}
+              >
+                {poked ? "Poked ✓" : "👉 Poke the slowpokes"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

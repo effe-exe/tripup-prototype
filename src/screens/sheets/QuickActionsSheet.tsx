@@ -1,4 +1,4 @@
-import { MapPin, Receipt, UserPlus, Vote } from "lucide-react";
+import { MapPin, Receipt, Sparkles, UserPlus, Vote } from "lucide-react";
 import { BottomSheet } from "../../components/ui";
 import { useStore } from "../../state/store";
 
@@ -32,6 +32,19 @@ export default function QuickActionsSheet() {
   return (
     <BottomSheet open={open} onClose={() => dispatch({ type: "CLOSE_SHEET" })}>
       <div className="flex flex-col px-5 pb-8 pt-2">
+        {/* Flagship: fake-AI planner — visually lifted out of the plain row list */}
+        <button
+          onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "aiPlan" } as const)}
+          className="mb-2 flex h-14 items-center gap-3 rounded-2xl bg-sunset-50 px-3 text-left active:bg-sunset-100"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sunset-100">
+            <Sparkles size={20} strokeWidth={1.75} className="text-sunset-600" />
+          </span>
+          <span className="text-base font-semibold text-ink-900">
+            Ask AI — what should we do?
+          </span>
+        </button>
+
         {rows.map((r, i) => (
           <button
             key={r.label}

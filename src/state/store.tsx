@@ -34,7 +34,16 @@ export type Sheet =
   | "settle"
   | "quickActions"
   | "pollResult"
-  | "note";
+  | "note"
+  | "newTrip"
+  | "tripSettings"
+  | "itineraryDetail"
+  | "profile"
+  | "filters"
+  | "expenseDetail"
+  | "allMemories"
+  | "film"
+  | "aiPlan";
 export type Screen = "home" | "trip" | "memories";
 
 export interface Banner {
@@ -51,10 +60,21 @@ export interface SwipeState {
   matches: Record<string, MemberId[]>;
 }
 
+/** Live ambient presence shown in the swipe ticker bubble. */
+export interface SwipeTicker {
+  member: MemberId;
+  /** e.g. "is swiping…" or "liked Terraço ♥" */
+  verb: string;
+  /** bump key so the component can re-animate on change */
+  seq: number;
+}
+
 interface State {
   screen: Screen;
   tab: Tab;
   sheet: Sheet;
+  /** context id for detail sheets (itinerary item id, expense id, …) */
+  sheetPayload: string | null;
   renJoined: boolean;
   members: MemberId[]; // in display order
   poll: Poll;
@@ -65,6 +85,7 @@ interface State {
   buzz: BuzzEvent[];
   banners: Banner[];
   swipe: SwipeState;
+  swipeTicker: SwipeTicker;
   memories: Memory[];
   notes: TripNote[];
   settleStarted: boolean;
@@ -77,6 +98,7 @@ const initialState: State = {
   screen: "home",
   tab: "hub",
   sheet: null,
+  sheetPayload: null,
   renJoined: false,
   members: ["ari", "nic", "maya", "tomas", "zoe"],
   poll: initialPoll,
@@ -92,6 +114,7 @@ const initialState: State = {
     passed: [],
     matches: { marealta: ["maya", "zoe"], terraco: ["maya"] },
   },
+  swipeTicker: { member: "maya", verb: "is swiping…", seq: 0 },
   memories: initialMemories,
   notes: initialNotes,
   settleStarted: false,
@@ -104,11 +127,14 @@ type Action =
   | { type: "NAV_HOME" }
   | { type: "OPEN_TRIP" }
   | { type: "SET_TAB"; tab: Tab }
-  | { type: "OPEN_SHEET"; sheet: Sheet }
+  | { type: "OPEN_SHEET"; sheet: Sheet; payload?: string }
   | { type: "CLOSE_SHEET" }
   | { type: "OPEN_MEMORIES" }
   | { type: "REN_JOINS" }
   | { type: "SWIPE"; dir: "like" | "pass" }
+  | { type: "SWIPE_UNDO" }
+  | { type: "SET_TICKER"; member: MemberId; verb: string }
+  | { type: "AMBIENT_LIKE"; member: MemberId; restaurantId: string; label: string }
   | { type: "SEND_POLL" }
   | { type: "VOTE"; member: MemberId; restaurantId: string }
   | { type: "CLOSE_POLL" }
@@ -135,14 +161,47 @@ function reducer(state: State, action: Action): State {
     case "SET_TAB":
       return { ...state, tab: action.tab, sheet: null, buzzUnread: action.tab === "buzz" ? 0 : state.buzzUnread };
     case "OPEN_SHEET":
-      return { ...state, sheet: action.sheet };
+      return { ...state, sheet: action.sheet, sheetPayload: action.payload ?? null };
     case "CLOSE_SHEET":
-      return { ...state, sheet: null };
+      return { ...state, sheet: null, sheetPayload: null };
     case "OPEN_MEMORIES":
       return { ...state, screen: "memories", sheet: null };
     case "REN_JOINS":
       if (state.renJoined) return state;
       return { ...state, renJoined: true, members: [...state.members, "ren"] };
+    case "SET_TICKER":
+      return {
+        ...state,
+        swipeTicker: { member: action.member, verb: action.verb, seq: state.swipeTicker.seq + 1 },
+      };
+    case "AMBIENT_LIKE": {
+      const prev = state.swipe.matches[action.restaurantId] ?? [];
+      const matches = prev.includes(action.member)
+        ? state.swipe.matches
+        : { ...state.swipe.matches, [action.restaurantId]: [...prev, action.member] };
+      return {
+        ...state,
+        swipe: { ...state.swipe, matches },
+        swipeTicker: {
+          member: action.member,
+          verb: "liked " + action.label + " ♥",
+          seq: state.swipeTicker.seq + 1,
+        },
+      };
+    }
+    case "SWIPE_UNDO": {
+      if (state.swipe.index === 0) return state;
+      const prevRest = RESTAURANTS[state.swipe.index - 1];
+      return {
+        ...state,
+        swipe: {
+          ...state.swipe,
+          index: state.swipe.index - 1,
+          liked: state.swipe.liked.filter((id) => id !== prevRest.id),
+          passed: state.swipe.passed.filter((id) => id !== prevRest.id),
+        },
+      };
+    }
     case "SWIPE": {
       const rest = RESTAURANTS[state.swipe.index];
       if (!rest) return state;
@@ -352,6 +411,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       });
     }
   }, [state.settleStarted]);
+
+  // Ambient liveness: friends acting in near-real-time after the trip opens
+  useEffect(() => {
+    if (state.screen === "trip") {
+      once("ambient", () => {
+        after(12000, () => {
+          dispatch({ type: "PUSH_BANNER", emoji: "📸", text: "Maya added 2 photos from Miradouro" });
+          dispatch({ type: "PUSH_BUZZ", icon: "itinerary", text: "Maya added 2 photos from Miradouro da Graça", time: "19:58" });
+        });
+        after(26000, () => {
+          dispatch({ type: "PUSH_BUZZ", icon: "vote", text: "Tomás is checking tonight's menus", time: "20:01" });
+        });
+      });
+    }
+  }, [state.screen]);
+
+  // Live swipe ticker: presence + likes cycling while the user is on Swipe
+  useEffect(() => {
+    if (state.screen === "trip" && state.tab === "swipe") {
+      once("ticker", () => {
+        after(4000, () => dispatch({ type: "SET_TICKER", member: "zoe", verb: "is swiping…" }));
+        after(8000, () => dispatch({ type: "AMBIENT_LIKE", member: "zoe", restaurantId: "terraco", label: "Terraço" }));
+        after(13000, () => dispatch({ type: "SET_TICKER", member: "nic", verb: "is swiping…" }));
+        after(18000, () => dispatch({ type: "AMBIENT_LIKE", member: "nic", restaurantId: "vintem", label: "the tasca" }));
+        after(24000, () => dispatch({ type: "SET_TICKER", member: "maya", verb: "is swiping…" }));
+      });
+    }
+  }, [state.screen, state.tab]);
 
   // Auto-dismiss banners after 4s
   useEffect(() => {

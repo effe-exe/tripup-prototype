@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MoreVertical, Plus, Receipt, Sparkles } from "lucide-react";
+import { ChevronDown, MoreVertical, Plus, Receipt, Sparkles } from "lucide-react";
 import {
   Avatar,
   HomeIndicator,
@@ -13,19 +14,47 @@ import { useStore } from "../state/store";
 
 const spring = { type: "spring", stiffness: 260, damping: 30 } as const;
 
+/** Previous trip days — display-only recap data. */
+const PREVIOUS_DAYS = [
+  {
+    id: "aug16",
+    label: "Sat, Aug 16",
+    summary: "Sintra day · 5 spots · €130",
+    items: [
+      { time: "09:10", title: "Train to Sintra" },
+      { time: "11:30", title: "Pena Palace" },
+      { time: "17:30", title: "Cabo da Roca sunset" },
+    ],
+  },
+  {
+    id: "aug15",
+    label: "Fri, Aug 15",
+    summary: "Bairro Alto night · 3 spots",
+    items: [
+      { time: "18:30", title: "Pastéis de Belém run" },
+      { time: "21:00", title: "Petiscos crawl" },
+      { time: "23:30", title: "Rooftop bar, Park" },
+    ],
+  },
+];
+
 export default function TripHub() {
   const { state, dispatch, voteCount } = useStore();
   const dinner = state.itinerary.find((i) => i.id === "it-dinner");
   const dinnerExpensed = state.expenses.some((e) => e.id === "e-dinner");
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
 
   const sorted = [...state.poll.options].sort((a, b) => b.votes.length - a.votes.length);
   const leadName = RESTAURANTS.find((r) => r.id === sorted[0]?.restaurantId)?.name;
   const leadText =
     voteCount === 0 ? "3 options · 0/6 voted" : `${leadName} leads · ${voteCount}/6 voted`;
 
+  const tripTotal = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+
   const onDinnerTap = () => {
     if (state.poll.status === "open") dispatch({ type: "OPEN_SHEET", sheet: "pollVote" });
     else if (state.poll.status === "draft") dispatch({ type: "OPEN_SHEET", sheet: "createPoll" });
+    else dispatch({ type: "OPEN_SHEET", sheet: "itineraryDetail", payload: "it-dinner" });
   };
 
   return (
@@ -37,7 +66,10 @@ export default function TripHub() {
         onBack={() => dispatch({ type: "NAV_HOME" })}
         backLabel="Trips"
         trailing={
-          <button className="p-1 text-ink-900">
+          <button
+            onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "tripSettings" })}
+            className="p-1 text-ink-900"
+          >
             <MoreVertical size={22} strokeWidth={1.75} />
           </button>
         }
@@ -142,7 +174,11 @@ export default function TripHub() {
             it.id === "it-dinner" ? (
               <DinnerRow key="it-dinner" it={it} pollOpen={state.poll.status === "open"} onTap={onDinnerTap} />
             ) : (
-              <DoneRow key={it.id} it={it} />
+              <DoneRow
+                key={it.id}
+                it={it}
+                onTap={() => dispatch({ type: "OPEN_SHEET", sheet: "itineraryDetail", payload: it.id })}
+              />
             ),
           )}
         </div>
@@ -164,6 +200,73 @@ export default function TripHub() {
             </motion.button>
           )}
         </AnimatePresence>
+
+        {/* Previous days — collapsed recaps */}
+        <p className="mb-3 mt-7 text-sm font-semibold text-ink-600">Earlier this trip</p>
+        <div className="flex flex-col gap-3">
+          {PREVIOUS_DAYS.map((day) => {
+            const expanded = expandedDay === day.id;
+            return (
+              <div key={day.id} className="overflow-hidden rounded-2xl bg-paper-0 shadow-elev-1">
+                <motion.button
+                  whileTap={{ scale: 0.995 }}
+                  onClick={() => setExpandedDay(expanded ? null : day.id)}
+                  className="flex w-full items-center gap-3 p-3 text-left"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-bold text-ink-900">{day.label}</p>
+                    <p className="truncate text-xs font-medium tabular text-ink-500">{day.summary}</p>
+                  </div>
+                  <motion.span
+                    animate={{ rotate: expanded ? 180 : 0 }}
+                    transition={spring}
+                    className="shrink-0 text-ink-400"
+                  >
+                    <ChevronDown size={18} />
+                  </motion.span>
+                </motion.button>
+                <AnimatePresence initial={false}>
+                  {expanded && (
+                    <motion.div
+                      key="rows"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={spring}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex flex-col gap-2.5 px-4 pb-3.5 pt-0.5">
+                        {day.items.map((row) => (
+                          <div key={row.title} className="flex items-center gap-2.5">
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-line-300" />
+                            <span className="text-xs font-semibold tabular text-ink-500">
+                              {row.time}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink-900">
+                              {row.title}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Trip total → Split */}
+        <div className="mt-4 flex justify-center">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => dispatch({ type: "SET_TAB", tab: "split" })}
+            className="inline-flex items-center gap-2 rounded-full bg-paper-0 px-4 py-2.5 text-[13px] font-semibold tabular text-ink-600 shadow-elev-1"
+          >
+            <span className="text-sunset-700">Trip total €{tripTotal.toLocaleString("en-US")}</span>
+            · view in Split →
+          </motion.button>
+        </div>
       </div>
 
       <HomeIndicator />
@@ -171,10 +274,14 @@ export default function TripHub() {
   );
 }
 
-/* Done itinerary row — dimmed 55% photo + green check */
-function DoneRow({ it }: { it: ItineraryItem }) {
+/* Done itinerary row — dimmed 55% photo + green check; taps into detail */
+function DoneRow({ it, onTap }: { it: ItineraryItem; onTap: () => void }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-paper-0 p-3 shadow-elev-1">
+    <motion.button
+      whileTap={{ scale: 0.99 }}
+      onClick={onTap}
+      className="flex w-full items-center gap-3 rounded-2xl bg-paper-0 p-3 text-left shadow-elev-1"
+    >
       {it.photo && (
         <img src={it.photo} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover opacity-55" />
       )}
@@ -186,7 +293,7 @@ function DoneRow({ it }: { it: ItineraryItem }) {
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success-50 text-[13px] font-bold text-success-600">
         ✓
       </span>
-    </div>
+    </motion.button>
   );
 }
 
@@ -225,13 +332,14 @@ function DinnerRow({
             )}
           </motion.button>
         ) : (
-          <motion.div
+          <motion.button
             key="planned"
             layout
             initial={{ opacity: 0, y: 14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={spring}
-            className="rounded-2xl bg-paper-0 p-3 shadow-elev-2"
+            onClick={onTap}
+            className="w-full rounded-2xl bg-paper-0 p-3 text-left shadow-elev-2"
           >
             <div className="flex items-center gap-3">
               {it.photo && (
@@ -253,7 +361,7 @@ function DinnerRow({
                 🧭 Directions
               </span>
             </div>
-          </motion.div>
+          </motion.button>
         )}
       </AnimatePresence>
     </motion.div>

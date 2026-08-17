@@ -14,6 +14,15 @@ import AddExpenseSheet from "./screens/sheets/AddExpenseSheet";
 import SettleSheet from "./screens/sheets/SettleSheet";
 import QuickActionsSheet from "./screens/sheets/QuickActionsSheet";
 import NoteSheet from "./screens/sheets/NoteSheet";
+import NewTripSheet from "./screens/sheets/NewTripSheet";
+import TripSettingsSheet from "./screens/sheets/TripSettingsSheet";
+import ItineraryDetailSheet from "./screens/sheets/ItineraryDetailSheet";
+import ProfileSheet from "./screens/sheets/ProfileSheet";
+import FiltersSheet from "./screens/sheets/FiltersSheet";
+import ExpenseDetailSheet from "./screens/sheets/ExpenseDetailSheet";
+import AllMemoriesSheet from "./screens/sheets/AllMemoriesSheet";
+import FilmSheet from "./screens/sheets/FilmSheet";
+import AiPlanSheet from "./screens/sheets/AiPlanSheet";
 
 function Phone() {
   const { state } = useStore();
@@ -43,6 +52,15 @@ function Phone() {
       <SettleSheet />
       <QuickActionsSheet />
       <NoteSheet />
+      <NewTripSheet />
+      <TripSettingsSheet />
+      <ItineraryDetailSheet />
+      <ProfileSheet />
+      <FiltersSheet />
+      <ExpenseDetailSheet />
+      <AllMemoriesSheet />
+      <FilmSheet />
+      <AiPlanSheet />
       <BannerHost />
     </div>
   );

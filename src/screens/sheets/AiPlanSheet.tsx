@@ -1,0 +1,314 @@
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Heart, RotateCcw, Sparkles } from "lucide-react";
+import { BottomSheet, Chip, GhostButton, PrimaryButton } from "../../components/ui";
+import { useStore } from "../../state/store";
+
+/** Fake-AI planner (flagship demo). Three phases, no network — all copy is scripted. */
+type Phase = "ask" | "thinking" | "results";
+
+const EXAMPLES = [
+  "Something chill for 4 tonight",
+  "What do we do tomorrow?",
+  "Rainy morning backup",
+  "Big group dinner under €20pp",
+];
+
+interface Suggestion {
+  id: string;
+  emoji: string;
+  name: string;
+  rating: string;
+  reviews: string;
+  price: string;
+  distance: string;
+  why: string;
+}
+
+/** Google-Maps-shaped data, Lisbon-plausible — hardcoded for the demo. */
+const SUGGESTIONS: Suggestion[] = [
+  {
+    id: "lxfactory",
+    emoji: "🛍",
+    name: "LX Factory market stroll",
+    rating: "4.6",
+    reviews: "3.1k",
+    price: "free",
+    distance: "2.1 km",
+    why: "Maya + Zoe will love the vintage stalls",
+  },
+  {
+    id: "belem",
+    emoji: "🥮",
+    name: "Pastéis de Belém run",
+    rating: "4.8",
+    reviews: "12k",
+    price: "€",
+    distance: "4 km",
+    why: "Warm pastéis at opening time — no queue before 9",
+  },
+  {
+    id: "kayak",
+    emoji: "🛶",
+    name: "Tejo sunrise kayak",
+    rating: "4.7",
+    reviews: "890",
+    price: "€€",
+    distance: "1.5 km",
+    why: "Active start — Tomás's kind of morning",
+  },
+  {
+    id: "azulejo",
+    emoji: "🎨",
+    name: "Alfama azulejo workshop",
+    rating: "4.9",
+    reviews: "240",
+    price: "€€",
+    distance: "600 m",
+    why: "Rainy-proof · small group friendly",
+  },
+];
+
+/** Reads the prompt the way the demo script expects — never fails, always plausible. */
+function headerFor(prompt: string): string {
+  const p = prompt.toLowerCase();
+  if (p.includes("tonight")) return "Tonight · for 6";
+  if (p.includes("tomorrow")) return "Tomorrow · for 6";
+  return "Ideas for the group";
+}
+
+const EASE_OUT = [0.22, 0.9, 0.3, 1] as const;
+
+export default function AiPlanSheet() {
+  const { state, dispatch } = useStore();
+  const open = state.sheet === "aiPlan";
+
+  const [phase, setPhase] = useState<Phase>("ask");
+  const [prompt, setPrompt] = useState("");
+  const [hearted, setHearted] = useState<string[]>([]);
+
+  // Fresh ask every time the sheet opens
+  useEffect(() => {
+    if (open) {
+      setPhase("ask");
+      setPrompt("");
+      setHearted([]);
+    }
+  }, [open]);
+
+  // Fake think, then reveal — single pass, cleaned up on close
+  useEffect(() => {
+    if (!open || phase !== "thinking") return;
+    const t = window.setTimeout(() => setPhase("results"), 1800);
+    return () => clearTimeout(t);
+  }, [open, phase]);
+
+  const toggleHeart = (id: string) =>
+    setHearted((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const close = () => dispatch({ type: "CLOSE_SHEET" });
+
+  const startMatch = () => {
+    dispatch({ type: "PUSH_BANNER", emoji: "🔥", text: "Sent to the group — swipe session open" });
+    dispatch({ type: "SET_TAB", tab: "swipe" } as const);
+    close();
+  };
+
+  return (
+    <BottomSheet open={open} full onClose={close}>
+      <AnimatePresence mode="wait" initial={false}>
+        {/* ---------- Phase 1 · ask ---------- */}
+        {phase === "ask" && (
+          <motion.div
+            key="ask"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: EASE_OUT }}
+            className="flex min-h-full flex-col"
+          >
+            <div className="flex-1 px-5 pt-2">
+              <p className="flex items-center justify-center gap-1.5 text-[13px] font-semibold text-sunset-700">
+                <Sparkles size={14} strokeWidth={2} />
+                Ask TripUp AI
+              </p>
+              <h2 className="mt-3 text-[26px] font-bold leading-8 tracking-[-0.3px] text-ink-900">
+                What's the plan?
+              </h2>
+
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                rows={3}
+                placeholder="Tell me the vibe, the time, the budget…"
+                className="mt-4 w-full resize-none rounded-2xl border border-line-300 bg-paper-0 px-4 py-3.5 text-base font-medium leading-6 text-ink-900 placeholder:font-normal placeholder:text-ink-400 focus:border-sunset-300 focus:outline-none"
+              />
+
+              <p className="mt-4 text-[13px] font-semibold text-ink-600">Try one of these</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {EXAMPLES.map((ex) => (
+                  <Chip key={ex} selected={prompt === ex} onClick={() => setPrompt(ex)}>
+                    {ex}
+                  </Chip>
+                ))}
+              </div>
+
+              <div className="mt-5 rounded-2xl bg-sunset-50 px-4 py-3">
+                <p className="text-[13px] font-medium leading-5 text-sunset-700">
+                  TripUp AI knows your group: Maya loves rooftops, Nic skips wine, Zoe's a nightowl 🌙
+                </p>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 mt-6 border-t border-line-200 bg-paper-0 px-5 pb-8 pt-3">
+              <PrimaryButton
+                full
+                disabled={prompt.trim().length === 0}
+                onClick={() => setPhase("thinking")}
+              >
+                Find ideas ✨
+              </PrimaryButton>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ---------- Phase 2 · thinking ---------- */}
+        {phase === "thinking" && (
+          <motion.div
+            key="thinking"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: EASE_OUT }}
+            className="flex min-h-full flex-col items-center justify-center px-8 py-16 text-center"
+          >
+            <motion.span
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-sunset-50"
+            >
+              <Sparkles size={28} strokeWidth={1.75} className="text-sunset-500" />
+            </motion.span>
+
+            <p className="mt-5 max-w-[16rem] text-[15px] font-semibold leading-6 text-ink-600">
+              Checking maps, reviews &amp; the group's taste…
+            </p>
+
+            <div className="mt-4 flex gap-1.5" aria-hidden>
+              {[0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  animate={{ opacity: [0.6, 1, 0.6] }}
+                  transition={{
+                    duration: 1.6,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.22,
+                  }}
+                  className="h-2 w-2 rounded-full bg-sunset-300"
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ---------- Phase 3 · results ---------- */}
+        {phase === "results" && (
+          <motion.div
+            key="results"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: EASE_OUT }}
+            className="flex min-h-full flex-col"
+          >
+            <div className="flex-1 px-5 pt-2">
+              <p className="flex items-center justify-center gap-1.5 text-[13px] font-semibold text-sunset-700">
+                <Sparkles size={14} strokeWidth={2} />
+                TripUp AI
+              </p>
+              <h2 className="mt-2 text-[22px] font-bold leading-7 tracking-[-0.2px] text-ink-900">
+                {headerFor(prompt)}
+              </h2>
+              <p className="mt-1 truncate text-[13px] font-medium text-ink-500">“{prompt.trim()}”</p>
+
+              <div className="mt-4 flex flex-col gap-3">
+                {SUGGESTIONS.map((s, i) => {
+                  const on = hearted.includes(s.id);
+                  return (
+                    <motion.div
+                      key={s.id}
+                      initial={{ opacity: 0, y: 14 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.32,
+                        ease: EASE_OUT,
+                        delay: 0.06 * i,
+                      }}
+                      className="flex items-start gap-3 rounded-2xl border border-line-200 bg-paper-0 p-3.5 shadow-elev-1"
+                    >
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sunset-50 text-[22px] leading-none">
+                        {s.emoji}
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-bold leading-5 text-ink-900">{s.name}</p>
+                        <p className="mt-1 text-xs font-medium text-ink-500">
+                          <span className="text-golden-400">★</span>{" "}
+                          <span className="tabular">{s.rating}</span> ({s.reviews}) · {s.price} ·{" "}
+                          <span className="tabular">{s.distance}</span>
+                        </p>
+                        <p className="mt-1.5 text-[12.5px] font-medium italic leading-4 text-sunset-700">
+                          ✨ {s.why}
+                        </p>
+                      </div>
+
+                      <motion.button
+                        whileTap={{ scale: 0.88 }}
+                        onClick={() => toggleHeart(s.id)}
+                        aria-pressed={on}
+                        aria-label={`${on ? "Unsave" : "Save"} ${s.name}`}
+                        className="-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full active:bg-paper-100"
+                      >
+                        <Heart
+                          size={20}
+                          strokeWidth={1.75}
+                          className={on ? "text-sunset-500" : "text-ink-400"}
+                          fill={on ? "#FF5A45" : "none"}
+                        />
+                      </motion.button>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => setPhase("ask")}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-2 text-[13px] font-semibold text-ink-500 active:bg-paper-100"
+                >
+                  <RotateCcw size={14} strokeWidth={2} />
+                  Ask something else
+                </button>
+              </div>
+            </div>
+
+            {/* Sticky hand-off — straight into the group's swipe session */}
+            <div className="sticky bottom-0 mt-4 border-t border-line-200 bg-paper-0 px-5 pb-8 pt-3">
+              <PrimaryButton full onClick={startMatch}>
+                Start a group match 🔥
+              </PrimaryButton>
+              <div className="mt-1 flex justify-center">
+                <GhostButton
+                  onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "createPoll" } as const)}
+                >
+                  Make it a poll instead
+                </GhostButton>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </BottomSheet>
+  );
+}
