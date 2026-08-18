@@ -4,7 +4,7 @@ import { MEMBERS } from "../../data/mock";
 import type { MemberId } from "../../data/types";
 import { fmtEUR, fmtEURWhole } from "../../data/balances";
 import { AnimatedNumber, Avatar, BottomSheet, StatusBadge, StatusBar } from "../../components/ui";
-import { rowEnter } from "../../components/motion";
+import { rowEnter, tapCard } from "../../components/motion";
 import { Check } from "lucide-react";
 
 const WRAP_AVATARS: MemberId[] = ["ari", "nic", "maya", "tomas", "zoe", "ren"];
@@ -65,30 +65,45 @@ export default function SettleSheet() {
           </div>
 
           <div className="mt-4 flex flex-col gap-2.5">
-            {state.transfers.map((t, i) => (
-              <motion.div
-                key={t.from}
-                layout
-                {...rowEnter(i, 0.06)}
-                className="flex items-center gap-3 rounded-2xl border border-line-200 bg-paper-0 p-3.5 shadow-elev-1"
-              >
-                <Avatar id={t.from} size={40} state={t.status === "paid" ? "settled" : "default"} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-semibold text-ink-900">
-                    {MEMBERS[t.from].name} → {MEMBERS[t.to].name}
-                  </p>
-                  {t.from === "ren" && (
-                    <p className="text-xs font-medium text-ink-500">guest checkout · Apple Pay</p>
-                  )}
-                </div>
-                <span className="tabular text-[15px] font-bold text-ink-900">{fmtEUR(t.amount)}</span>
-                <StatusBadge status={t.status} />
-              </motion.div>
-            ))}
+            {state.transfers.map((t, i) => {
+              const pending = t.status === "pending";
+              return (
+                <motion.button
+                  key={t.from}
+                  layout
+                  {...rowEnter(i, 0.06)}
+                  whileTap={pending ? tapCard : undefined}
+                  disabled={!pending}
+                  onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "pay", payload: t.from })}
+                  aria-label={
+                    pending
+                      ? `Pay ${MEMBERS[t.to].name} ${fmtEUR(t.amount)} for ${MEMBERS[t.from].name}`
+                      : undefined
+                  }
+                  className="flex w-full items-center gap-3 rounded-2xl border border-line-200 bg-paper-0 p-3.5 text-left shadow-elev-1 active:bg-paper-100 disabled:active:bg-paper-0"
+                >
+                  <Avatar id={t.from} size={40} state={t.status === "paid" ? "settled" : "default"} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-semibold text-ink-900">
+                      {MEMBERS[t.from].name} → {MEMBERS[t.to].name}
+                    </p>
+                    <p className="text-xs font-medium text-ink-500">
+                      {!pending
+                        ? "Settled"
+                        : t.from === "ren"
+                          ? "guest checkout · tap to pay"
+                          : "Tap to pay"}
+                    </p>
+                  </div>
+                  <span className="tabular text-[15px] font-bold text-ink-900">{fmtEUR(t.amount)}</span>
+                  <StatusBadge status={t.status} />
+                </motion.button>
+              );
+            })}
           </div>
 
           <p className="mt-4 text-center text-xs font-medium text-ink-500">
-            Rows flip as friends pay — nothing else to do.
+            Tap a row to pay — rows also flip as friends settle.
           </p>
         </div>
 

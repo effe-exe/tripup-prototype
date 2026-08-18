@@ -41,7 +41,8 @@ Ari, last evening of a Lisbon trip with five friends. She opens TripUp to sort d
 | 9 | Hub → **"Add the Maré Alta bill?"** | Expense sheet, €186 |
 | 10 | On the **Wine** row, tap **Nic** and **Ren** off | Their shares recompute live: 35 → 23 |
 | 11 | **Add expense** → Balances | "You're all square", and **11 IOUs → 4 payments** |
-| 12 | **Settle up** | Payments land one by one, then the wrap screen |
+| 12 | **Settle up** → tap a pending row | The payment sheet: what it covers, Apple Pay / IBAN / cash, then the row settles |
+| 12b | Let the rest land | Friends pay one by one, then the wrap screen |
 | 13 | **Relive the trip** | Memories: film, photo grid, notes |
 
 Everything is mock data on a scripted timeline — no backend, no network. The timeline
@@ -55,8 +56,9 @@ or get stuck.
   Proposals come with a reason tied to the group's tastes, or you pick spots from a map.
 - **Trip memories.** The trip ends on photos and an auto-cut film instead of a balance
   sheet — the part people actually want to share.
-- **Real settlement.** Splitwise tells you who owes what; this moves the money and
-  closes the loop.
+- **Real settlement.** Splitwise tells you who owes what; this moves the money. Tap
+  any pending transfer to open the payment sheet — it shows exactly which expenses
+  the amount covers, offers Apple Pay / IBAN / cash, and marks the debt settled.
 
 ## Design decisions worth knowing
 
@@ -69,6 +71,13 @@ or get stuck.
 - **Nothing flashes.** All motion is single-pass and gentle; `prefers-reduced-motion`
   is honoured. (Accessibility requirement, not a style choice.)
 - **No emoji anywhere.** They render differently per device — every icon is a vector.
+
+## How this was built
+
+Designed in Figma, then built as real code with **Claude Code** (Anthropic's agentic
+CLI) driving the implementation — the brief's "AI-assisted code generation tool".
+The design system, the scenario data and the interaction decisions are authored;
+the AI wrote the code against them.
 
 ## Stack
 

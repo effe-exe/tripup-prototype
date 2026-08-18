@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { Avatar, BottomSheet, Chip, PrimaryButton } from "../../components/ui";
@@ -26,9 +26,25 @@ const QR_CELLS: boolean[] = (() => {
   return cells;
 })();
 
+/** Ari's phone book — invites are mock, so no store change on tap. */
+const CONTACTS = [
+  { name: "Bea", handle: "bea.almeida", bg: "#FFE1DB", fg: "#C4331F" },
+  { name: "Diogo", handle: "dioguinho", bg: "#EFFAF8", fg: "#0B7566" },
+  { name: "Inês", handle: "ines.rmd", bg: "#F3EBFF", fg: "#7A4FC0" },
+  { name: "Luca", handle: "luca.vsc", bg: "#FFF7E8", fg: "#9A6700" },
+  { name: "Sofia", handle: "sofia.mtz", bg: "#EDFAF2", fg: "#178A50" },
+  { name: "Marta", handle: "marta.gv", bg: "#EAF3FF", fg: "#1D5FBF" },
+];
+
 export default function AddMemberSheet() {
   const { state, dispatch } = useStore();
   const open = state.sheet === "addMember";
+  const [query, setQuery] = useState("");
+  const [scope, setScope] = useState<"trip" | "today">("today");
+  const q = query.trim().toLowerCase();
+  // fold accents so "ines" finds Inês
+  const flat = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const matches = q ? CONTACTS.filter((c) => flat(c.name + c.handle).includes(flat(q))) : CONTACTS;
 
   // Ren joined while the sheet is open → celebrate, then auto-close after 1.5s
   useEffect(() => {
@@ -113,17 +129,61 @@ export default function AddMemberSheet() {
           <p className="text-xs font-medium text-ink-500">Or let them scan this</p>
         </div>
 
-        <div className="flex h-12 items-center gap-2.5 rounded-xl border border-line-300 bg-paper-0 px-4">
-          <Search size={18} strokeWidth={1.75} className="text-ink-400" />
-          <span className="text-[15px] text-ink-500">Search contacts</span>
+        <div>
+          <div className="flex h-12 items-center gap-2.5 rounded-xl border border-line-300 bg-paper-0 px-4 focus-within:border-sunset-300">
+            <Search size={18} strokeWidth={1.75} className="shrink-0 text-ink-400" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search contacts"
+              aria-label="Search contacts"
+              className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-ink-900 placeholder:font-normal placeholder:text-ink-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="mt-2 flex flex-col">
+            {matches.map((c) => (
+              <motion.button
+                key={c.name}
+                whileTap={{ scale: 0.99 }}
+                onClick={() =>
+                  dispatch({ type: "PUSH_BANNER", icon: "join", text: `Invite sent to ${c.name}` })
+                }
+                className="hit44 flex items-center gap-3 rounded-xl px-1.5 py-2 text-left active:bg-paper-100"
+              >
+                <span
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                  style={{ background: c.bg, color: c.fg }}
+                >
+                  {c.name[0]}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-semibold text-ink-900">
+                    {c.name}
+                  </span>
+                  <span className="block truncate text-xs font-medium text-ink-500">{c.handle}</span>
+                </span>
+                <span className="shrink-0 text-[13px] font-semibold text-sunset-700">Invite</span>
+              </motion.button>
+            ))}
+            {!matches.length && (
+              <p className="px-1.5 py-2 text-xs font-medium text-ink-500">No contacts match</p>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-2">
-          <Chip>Whole trip</Chip>
-          <Chip selected>From today ▸</Chip>
+          <Chip selected={scope === "trip"} onClick={() => setScope("trip")}>
+            Whole trip
+          </Chip>
+          <Chip selected={scope === "today"} onClick={() => setScope("today")}>
+            From today ▸
+          </Chip>
         </div>
         <p className="text-xs font-medium leading-4 text-ink-500">
-          Ren will only see plans &amp; expenses from Aug 17 onward.
+          {scope === "today"
+            ? "Ren will only see plans & expenses from Aug 17 onward."
+            : "Ren will see the whole trip's plans and expenses, including the days before they joined."}
         </p>
       </div>
     </BottomSheet>

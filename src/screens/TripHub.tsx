@@ -91,6 +91,7 @@ export default function TripHub() {
         trailing={
           <button
             onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "tripSettings" })}
+            aria-label="Open trip settings"
             className="hit44 p-1 text-ink-900"
           >
             <MoreVertical size={22} strokeWidth={1.75} />
@@ -129,6 +130,7 @@ export default function TripHub() {
           </AnimatePresence>
           <button
             onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "addMember" })}
+            aria-label="Add someone to this trip"
             className="hit44 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-line-300 text-ink-500"
           >
             <Plus size={18} strokeWidth={1.75} />

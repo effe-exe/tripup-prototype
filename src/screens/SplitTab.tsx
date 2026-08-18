@@ -279,21 +279,38 @@ export default function SplitTab() {
                     <span className="tabular">{state.transfers.length}</span> payments
                   </p>
                   <div className="mt-3 flex flex-col gap-3">
-                    {state.transfers.map((t, i) => (
-                      <motion.div key={t.from} {...rowEnter(i, 0.06)} className="flex items-center gap-2.5">
-                        <Avatar id={t.from} size={28} state={t.status === "paid" ? "settled" : "default"} />
-                        <span className="flex-1 text-sm font-semibold text-ink-900">
-                          {MEMBERS[t.from].name} → {MEMBERS[t.to].name}
-                        </span>
-                        <span className="tabular text-sm font-bold text-ink-900">
-                          {fmtEUR(t.amount)}
-                        </span>
-                        <StatusBadge status={t.status} />
-                      </motion.div>
-                    ))}
+                    {state.transfers.map((t, i) => {
+                      const pending = t.status === "pending";
+                      return (
+                        <motion.button
+                          key={t.from}
+                          {...rowEnter(i, 0.06)}
+                          whileTap={pending ? tapCard : undefined}
+                          disabled={!pending}
+                          onClick={() =>
+                            dispatch({ type: "OPEN_SHEET", sheet: "pay", payload: t.from })
+                          }
+                          aria-label={
+                            pending
+                              ? `Pay ${MEMBERS[t.to].name} ${fmtEUR(t.amount)} for ${MEMBERS[t.from].name}`
+                              : undefined
+                          }
+                          className="hit44 flex w-full items-center gap-2.5 text-left"
+                        >
+                          <Avatar id={t.from} size={28} state={t.status === "paid" ? "settled" : "default"} />
+                          <span className="flex-1 text-sm font-semibold text-ink-900">
+                            {MEMBERS[t.from].name} → {MEMBERS[t.to].name}
+                          </span>
+                          <span className="tabular text-sm font-bold text-ink-900">
+                            {fmtEUR(t.amount)}
+                          </span>
+                          <StatusBadge status={t.status} />
+                        </motion.button>
+                      );
+                    })}
                   </div>
                   <p className="mt-3 text-xs font-medium text-ink-500">
-                    Everyone pays at most once. Nic receives everything.
+                    Tap a row to pay. Everyone pays at most once — Nic receives everything.
                   </p>
                 </>
               ) : (

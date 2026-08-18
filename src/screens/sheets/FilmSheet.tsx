@@ -38,7 +38,7 @@ export default function FilmSheet() {
 
   const close = () => dispatch({ type: "CLOSE_SHEET" });
   const share = () =>
-    dispatch({ type: "PUSH_BANNER", icon: "info", text: "Link copied - send it to the group" });
+    dispatch({ type: "PUSH_BANNER", icon: "info", text: "Link copied — send it to the group" });
 
   return (
     <AnimatePresence>

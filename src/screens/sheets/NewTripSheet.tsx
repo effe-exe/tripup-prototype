@@ -33,7 +33,7 @@ export default function NewTripSheet() {
   const create = () => {
     const tripName = name.trim() || "Ibiza Sept";
     dispatch({ type: "CLOSE_SHEET" });
-    dispatch({ type: "PUSH_BANNER", icon: "info", text: `${tripName} is waiting - trip created` });
+    dispatch({ type: "PUSH_BANNER", icon: "info", text: `${tripName} is waiting — trip created` });
     setName("");
     setDestination("");
     setDateChip(null);
@@ -125,7 +125,7 @@ export default function NewTripSheet() {
               dispatch({
                 type: "PUSH_BANNER",
                 icon: "join",
-                text: "Invite link copied - send it to anyone",
+                text: "Invite link copied — send it to anyone",
               })
             }
             className="hit44 flex items-center gap-3 text-left"

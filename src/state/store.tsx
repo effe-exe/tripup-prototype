@@ -33,6 +33,7 @@ export type Sheet =
   | "pollVote"
   | "addExpense"
   | "settle"
+  | "pay"
   | "quickActions"
   | "pollResult"
   | "note"
@@ -202,7 +203,7 @@ function reducer(state: State, action: Action): State {
             : state.poll,
         banners: [
           ...state.banners.slice(-1),
-          { id: bannerId++, icon: "session" as const, text: action.title + " - swipe session open" },
+          { id: bannerId++, icon: "session" as const, text: action.title + " — swipe session open" },
         ],
         buzz: [
           {
@@ -413,6 +414,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(loggingReducer, initialState);
   const timers = useRef<number[]>([]);
   const ranRef = useRef<Set<string>>(new Set());
+  /** latest state for scripted callbacks, which close over a stale snapshot */
+  const latest = useRef(state);
+  latest.current = state;
 
   const once = (key: string, fn: () => void) => {
     if (ranRef.current.has(key)) return;
@@ -429,7 +433,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       once("ren", () =>
         after(3000, () => {
           dispatch({ type: "REN_JOINS" });
-          dispatch({ type: "PUSH_BANNER", icon: "join", text: "Ren joined the trip - dinner only" });
+          dispatch({ type: "PUSH_BANNER", icon: "join", text: "Ren joined the trip — dinner only" });
           dispatch({ type: "PUSH_BUZZ", icon: "join", text: "Ren joined the trip", time: "19:52" });
         }),
       );
@@ -484,22 +488,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (state.settleStarted) {
       once("settle", () => {
-        after(3000, () => {
-          dispatch({ type: "MARK_PAID", from: "ren" });
-          dispatch({ type: "PUSH_BUZZ", icon: "money", text: "Ren paid Nic €23.00", time: "23:41" });
-        });
-        after(6000, () => {
-          dispatch({ type: "MARK_PAID", from: "tomas" });
-          dispatch({ type: "PUSH_BUZZ", icon: "money", text: "Tomás paid Nic €96.00", time: "23:44" });
-        });
-        after(9000, () => {
-          dispatch({ type: "MARK_PAID", from: "zoe" });
-          dispatch({ type: "PUSH_BUZZ", icon: "money", text: "Zoe paid Nic €126.00", time: "23:47" });
-        });
+        /* Skip anyone the presenter already paid by hand — MARK_PAID itself is
+           idempotent, but the buzz line would otherwise be posted twice. */
+        const pay = (from: MemberId, text: string, time: string) => {
+          if (latest.current.transfers.find((t) => t.from === from)?.status === "paid") return;
+          dispatch({ type: "MARK_PAID", from });
+          dispatch({ type: "PUSH_BUZZ", icon: "money", text, time });
+        };
+        after(3000, () => pay("ren", "Ren paid Nic €23.00", "23:41"));
+        after(6000, () => pay("tomas", "Tomás paid Nic €96.00", "23:44"));
+        after(9000, () => pay("zoe", "Zoe paid Nic €126.00", "23:47"));
         after(12000, () => {
-          dispatch({ type: "MARK_PAID", from: "maya" });
-          dispatch({ type: "PUSH_BANNER", icon: "done", text: "Everyone is square - that is a wrap" });
-          dispatch({ type: "PUSH_BUZZ", icon: "money", text: "Maya paid Nic €141.00 — all settled", time: "23:52" });
+          pay("maya", "Maya paid Nic €141.00 — all settled", "23:52");
+          dispatch({ type: "PUSH_BANNER", icon: "done", text: "Everyone’s square — that’s a wrap" });
         });
       });
     }

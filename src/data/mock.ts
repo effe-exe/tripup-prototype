@@ -207,8 +207,8 @@ export const initialItinerary: ItineraryItem[] = [
   {
     id: "it-dinner",
     time: "20:45",
-    title: "Dinner: up for vote",
-    subtitle: "3 options · poll closes 20:15",
+    title: "Dinner · nobody's decided",
+    subtitle: "Tap to pick it with the group",
     state: "undecided",
   },
 ];

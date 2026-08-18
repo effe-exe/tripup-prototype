@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useStore } from "../../state/store";
 import { photos } from "../../data/mock";
 import type { MemberId } from "../../data/types";
@@ -103,17 +103,11 @@ export default function AllMemoriesSheet() {
 
   return (
     <BottomSheet open={open} onClose={close} full>
-      <div className="flex items-center justify-between px-5 pb-1 pt-2">
+      {/* close lives in the sheet chrome now */}
+      <div className="px-5 pb-1 pt-2">
         <h2 className="tabular text-[20px] font-bold tracking-[-0.2px] text-ink-900">
           All memories · {total} photos
         </h2>
-        <button
-          onClick={close}
-          aria-label="Close"
-          className="hit44 -mr-1.5 flex h-9 w-9 items-center justify-center rounded-full text-ink-500 active:bg-paper-100"
-        >
-          <X size={20} strokeWidth={2} />
-        </button>
       </div>
 
       <div className="px-5 pb-10 pt-1">

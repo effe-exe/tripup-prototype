@@ -14,6 +14,7 @@ import PollVoteSheet from "./screens/sheets/PollVoteSheet";
 import PollResultTakeover from "./screens/sheets/PollResultTakeover";
 import AddExpenseSheet from "./screens/sheets/AddExpenseSheet";
 import SettleSheet from "./screens/sheets/SettleSheet";
+import PaySheet from "./screens/sheets/PaySheet";
 import QuickActionsSheet from "./screens/sheets/QuickActionsSheet";
 import NoteSheet from "./screens/sheets/NoteSheet";
 import NewTripSheet from "./screens/sheets/NewTripSheet";
@@ -79,6 +80,7 @@ function Phone() {
       <PollResultTakeover />
       <AddExpenseSheet />
       <SettleSheet />
+      <PaySheet />
       <QuickActionsSheet />
       <NoteSheet />
       <NewTripSheet />

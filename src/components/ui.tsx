@@ -21,6 +21,7 @@ import {
   Flame,
   PartyPopper,
   Info,
+  X,
 } from "lucide-react";
 import BoringAvatar from "boring-avatars";
 import { MEMBERS } from "../data/mock";
@@ -534,6 +535,8 @@ export function TabBar() {
           whileTap={{ scale: 0.92 }}
           transition={springFirm}
           onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "quickActions" })}
+          aria-label="Open quick actions"
+          aria-expanded={quickOpen}
           className="-mt-2 flex h-11 w-11 items-center justify-center rounded-full bg-sunset-500 text-white shadow-elev-3"
         >
           {/* plus turns into a close-ish glyph while the quick-actions sheet is up */}
@@ -621,13 +624,24 @@ export function BottomSheet({
             className="absolute inset-x-0 bottom-0 z-50 flex flex-col rounded-t-3xl bg-paper-0 shadow-elev-sheet"
             style={{ maxHeight: full ? "92%" : "60%", minHeight: full ? "92%" : undefined }}
           >
-            {/* Grabber — always draggable, even when the body is scrolled */}
-            <div
-              onPointerDown={(e) => dragControls.start(e)}
-              className="-mb-2 flex shrink-0 cursor-grab justify-center pb-2 pt-2 active:cursor-grabbing"
-              style={{ touchAction: "none" }}
-            >
-              <div className="h-1 w-9 rounded-full bg-line-300" />
+            {/* Grabber — always draggable, even when the body is scrolled.
+                The close button lives in the same chrome row so it can never
+                overlap a sheet's own title or controls. */}
+            <div className="relative flex h-11 shrink-0 items-start justify-center pt-2">
+              <div
+                onPointerDown={(e) => dragControls.start(e)}
+                className="flex flex-1 cursor-grab justify-center self-stretch active:cursor-grabbing"
+                style={{ touchAction: "none" }}
+              >
+                <div className="h-1 w-9 rounded-full bg-line-300" />
+              </div>
+              <button
+                onClick={onClose}
+                aria-label="Close sheet"
+                className="absolute right-1 top-0 flex h-11 w-11 items-center justify-center rounded-full text-ink-500 active:bg-paper-100"
+              >
+                <X size={18} strokeWidth={2.25} />
+              </button>
             </div>
             <div
               onPointerDown={arm}
