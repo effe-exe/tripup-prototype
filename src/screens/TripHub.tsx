@@ -52,6 +52,26 @@ export default function TripHub() {
 
   const tripTotal = state.expenses.reduce((sum, e) => sum + e.amount, 0);
 
+  /** The draft-state nudge tracks how far the group has got with deciding. */
+  const matchCount = Object.values(state.swipe.matches).filter((m) => m.length > 0).length;
+  const nudge = !state.session
+    ? {
+        title: "What are we doing tonight?",
+        cta: "Ask AI or pick spots on the map →",
+        act: () => dispatch({ type: "OPEN_SHEET", sheet: "aiPlan" as const }),
+      }
+    : matchCount > 0
+      ? {
+          title: `${matchCount} group ${matchCount === 1 ? "match" : "matches"} from Swipe`,
+          cta: "Make it a poll →",
+          act: () => dispatch({ type: "OPEN_SHEET", sheet: "createPoll" as const }),
+        }
+      : {
+          title: `${state.session.title} · swipe session open`,
+          cta: "Start swiping →",
+          act: () => dispatch({ type: "SET_TAB", tab: "swipe" as const }),
+        };
+
   const onDinnerTap = () => {
     if (state.poll.status === "open") dispatch({ type: "OPEN_SHEET", sheet: "pollVote" });
     else if (state.poll.status === "draft") dispatch({ type: "OPEN_SHEET", sheet: "createPoll" });
@@ -121,15 +141,15 @@ export default function TripHub() {
               layout
               exit={{ opacity: 0, y: -8 }}
               transition={spring}
-              onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "createPoll" })}
+              onClick={nudge.act}
               className="mt-1 flex w-full items-center gap-3 rounded-2xl border border-sunset-100 bg-sunset-50 p-4 text-left"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-paper-0">
                 <Sparkles size={20} strokeWidth={1.75} className="text-sunset-500" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-ink-900">3 group matches from Swipe</p>
-                <p className="text-xs font-semibold text-sunset-700">Make it a poll →</p>
+                <p className="text-sm font-bold text-ink-900">{nudge.title}</p>
+                <p className="text-xs font-semibold text-sunset-700">{nudge.cta}</p>
               </div>
             </motion.button>
           )}

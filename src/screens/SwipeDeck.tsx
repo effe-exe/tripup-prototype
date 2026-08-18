@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { animate, AnimatePresence, motion, useMotionValue, useTransform } from "framer-motion";
 import { Clock, Heart, Info, MapPin, SlidersHorizontal, Sparkles, Star, Undo2, X } from "lucide-react";
 import { Avatar, AvatarStack, Chip, GhostButton, PrimaryButton, StatusBar } from "../components/ui";
-import { RESTAURANTS, useStore } from "../state/store";
-import { MEMBERS } from "../data/mock";
+import { useStore } from "../state/store";
+import { MEMBERS, PLACES } from "../data/mock";
 import type { MemberId, Restaurant } from "../data/types";
 
 const SHORT_NAME: Record<string, string> = {
@@ -340,8 +340,10 @@ function TopCard({
 
 export default function SwipeDeck() {
   const { state, dispatch } = useStore();
-  const { swipe, poll } = state;
-  const deck = RESTAURANTS.slice(swipe.index);
+  const { swipe, poll, session } = state;
+  /** Nothing to swipe until somebody starts a session. */
+  const sessionDeck = session ? session.placeIds.map((id) => PLACES[id]).filter(Boolean) : [];
+  const deck = sessionDeck.slice(swipe.index);
   const top = deck[0] ?? null;
   const [pending, setPending] = useState<"like" | "pass" | null>(null);
   const [match, setMatch] = useState<{ rest: Restaurant; others: MemberId[] } | null>(null);
@@ -357,9 +359,7 @@ export default function SwipeDeck() {
       name: SHORT_NAME[id] ?? id,
       count: members.length + 1, // + Ari's side of the match
     }));
-  const trayThumb = trayEntries.length
-    ? RESTAURANTS.find((r) => r.id === trayEntries[0].id)
-    : undefined;
+  const trayThumb = trayEntries.length ? PLACES[trayEntries[0].id] : undefined;
 
   const onSettled = (dir: "like" | "pass") => {
     if (!top) return;
@@ -373,7 +373,8 @@ export default function SwipeDeck() {
 
   const onUndo = () => {
     if (swipe.index === 0) return;
-    const prev = RESTAURANTS[swipe.index - 1];
+    const prev = sessionDeck[swipe.index - 1];
+    if (!prev) return;
     setUndoDir(swipe.liked.includes(prev.id) ? "like" : "pass");
     setFlipped(false);
     setMatch(null);
@@ -391,16 +392,47 @@ export default function SwipeDeck() {
     dispatch({ type: "OPEN_SHEET", sheet: "createPoll" });
   };
 
+  if (!session) {
+    return (
+      <div className="relative flex h-full flex-col pb-[96px]">
+        <StatusBar />
+        <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-sunset-50">
+            <Sparkles size={30} strokeWidth={1.75} className="text-sunset-500" />
+          </div>
+          <h1 className="mt-5 text-[24px] font-bold leading-7 tracking-[-0.3px] text-ink-900">
+            Nothing to swipe yet
+          </h1>
+          <p className="mt-2 text-sm font-medium leading-5 text-ink-600">
+            Start a session and the whole group swipes the same shortlist.
+          </p>
+          <div className="mt-6 w-full">
+            <PrimaryButton full onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "aiPlan" })}>
+              What are we doing tonight?
+            </PrimaryButton>
+          </div>
+          <div className="mt-1">
+            <GhostButton onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "mapPick" })}>
+              Add spots from the map
+            </GhostButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex h-full flex-col pb-[96px]">
       <StatusBar />
 
       {/* Header */}
       <div className="flex items-end justify-between px-5 pt-1">
-        <h1 className="text-[24px] font-bold leading-7 tracking-[-0.3px] text-ink-900">
-          Tonight near Alfama
+        <h1 className="min-w-0 flex-1 truncate pr-3 text-[24px] font-bold leading-7 tracking-[-0.3px] text-ink-900">
+          {session ? session.title : "Swipe"}
         </h1>
-        <span className="pb-0.5 text-[13px] font-semibold text-ink-500">12 spots</span>
+        <span className="shrink-0 pb-0.5 text-[13px] font-semibold text-ink-500">
+          <span className="tabular">{sessionDeck.length}</span> spots
+        </span>
       </div>
 
       {/* Filter chips — "Dinner" deliberately has no emoji (tofu risk) */}

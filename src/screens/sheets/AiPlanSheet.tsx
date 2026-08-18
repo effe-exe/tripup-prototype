@@ -1,9 +1,23 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Croissant, Heart, Palette, RotateCcw, ShoppingBag, Sparkles, Star, Waves } from "lucide-react";
+import {
+  Croissant,
+  Fish,
+  Heart,
+  Music2,
+  Palette,
+  RotateCcw,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  Sunset,
+  TramFront,
+  Waves,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { BottomSheet, Chip, GhostButton, PrimaryButton } from "../../components/ui";
 import { useStore } from "../../state/store";
+import { AI_PROPOSALS, PLACES } from "../../data/mock";
 
 /** Fake-AI planner (flagship demo). Three phases, no network — all copy is scripted. */
 type Phase = "ask" | "thinking" | "results";
@@ -26,56 +40,59 @@ interface Suggestion {
   why: string;
 }
 
-/** Google-Maps-shaped data, Lisbon-plausible — hardcoded for the demo. */
-const SUGGESTIONS: Suggestion[] = [
-  {
-    id: "lxfactory",
-    Icon: ShoppingBag,
-    name: "LX Factory market stroll",
-    rating: "4.6",
-    reviews: "3.1k",
-    price: "free",
-    distance: "2.1 km",
-    why: "Maya + Zoe will love the vintage stalls",
-  },
-  {
-    id: "belem",
-    Icon: Croissant,
-    name: "Pastéis de Belém run",
-    rating: "4.8",
-    reviews: "12k",
-    price: "€",
-    distance: "4 km",
-    why: "Warm pastéis at opening time — no queue before 9",
-  },
-  {
-    id: "kayak",
-    Icon: Waves,
-    name: "Tejo sunrise kayak",
-    rating: "4.7",
-    reviews: "890",
-    price: "€€",
-    distance: "1.5 km",
-    why: "Active start — Tomás's kind of morning",
-  },
-  {
-    id: "azulejo",
-    Icon: Palette,
-    name: "Alfama azulejo workshop",
-    rating: "4.9",
-    reviews: "240",
-    price: "€€",
-    distance: "600 m",
-    why: "Rainy-proof · small group friendly",
-  },
-];
+/** Per-place icon + the "why this group" line the fake AI claims to have reasoned. */
+const PLACE_ICON: Record<string, LucideIcon> = {
+  vintem: Music2,
+  marealta: Fish,
+  terraco: Sunset,
+  lxfactory: ShoppingBag,
+  belem: Croissant,
+  kayak: Waves,
+  azulejo: Palette,
+  tram28: TramFront,
+};
+const PLACE_WHY: Record<string, string> = {
+  vintem: "Live fado at 21:30 - Maya has been asking all trip",
+  marealta: "Counter seats for 6 and natural wine for the drinkers",
+  terraco: "Sunset over the Tejo, and Zoe wants a rooftop",
+  lxfactory: "Maya + Zoe will love the vintage stalls",
+  belem: "Warm pasteis at opening time - no queue before 9",
+  kayak: "Active start - Tomas's kind of morning",
+  azulejo: "Rain-proof and small-group friendly",
+  tram28: "Three minutes from the flat, classic Lisbon",
+};
 
-/** Reads the prompt the way the demo script expects — never fails, always plausible. */
-function headerFor(prompt: string): string {
+type Intent = keyof typeof AI_PROPOSALS;
+
+/** Reads the prompt the way the demo script expects - never fails, always plausible. */
+function intentFor(prompt: string): Intent {
   const p = prompt.toLowerCase();
-  if (p.includes("tonight")) return "Tonight · for 6";
-  if (p.includes("tomorrow")) return "Tomorrow · for 6";
-  return "Ideas for the group";
+  if (p.includes("rain")) return "rainy";
+  if (p.includes("tomorrow") || p.includes("morning")) return "tomorrow";
+  return "tonight";
+}
+
+/** The title the session and poll inherit. */
+function titleFor(intent: Intent): string {
+  if (intent === "tomorrow") return "Tomorrow morning";
+  if (intent === "rainy") return "Rainy backup";
+  return "Dinner tonight";
+}
+
+function suggestionsFor(intent: Intent): Suggestion[] {
+  return AI_PROPOSALS[intent]
+    .map((id) => PLACES[id])
+    .filter(Boolean)
+    .map((pl) => ({
+      id: pl.id,
+      Icon: PLACE_ICON[pl.id] ?? Sparkles,
+      name: pl.name,
+      rating: pl.rating.toFixed(1),
+      reviews: pl.reviews >= 1000 ? (pl.reviews / 1000).toFixed(1) + "k" : String(pl.reviews),
+      price: pl.price,
+      distance: pl.distanceM >= 1000 ? (pl.distanceM / 1000).toFixed(1) + " km" : pl.distanceM + " m",
+      why: PLACE_WHY[pl.id] ?? "Fits what the group has liked so far",
+    }));
 }
 
 const EASE_OUT = [0.22, 0.9, 0.3, 1] as const;
@@ -87,6 +104,10 @@ export default function AiPlanSheet() {
   const [phase, setPhase] = useState<Phase>("ask");
   const [prompt, setPrompt] = useState("");
   const [hearted, setHearted] = useState<string[]>([]);
+
+  const intent = intentFor(prompt);
+  const suggestions = suggestionsFor(intent);
+  const selected = hearted.filter((id) => suggestions.some((s) => s.id === id));
 
   // Fresh ask every time the sheet opens
   useEffect(() => {
@@ -100,7 +121,10 @@ export default function AiPlanSheet() {
   // Fake think, then reveal — single pass, cleaned up on close
   useEffect(() => {
     if (!open || phase !== "thinking") return;
-    const t = window.setTimeout(() => setPhase("results"), 1800);
+    const t = window.setTimeout(() => {
+      setPhase("results");
+      setHearted(suggestionsFor(intentFor(prompt)).map((s) => s.id));
+    }, 1800);
     return () => clearTimeout(t);
   }, [open, phase]);
 
@@ -109,10 +133,10 @@ export default function AiPlanSheet() {
 
   const close = () => dispatch({ type: "CLOSE_SHEET" });
 
+  /** Starting a session IS the notify-everyone moment (banner + Buzz in the reducer). */
   const startMatch = () => {
-    dispatch({ type: "PUSH_BANNER", icon: "session", text: "Sent to the group - swipe session open" });
-    dispatch({ type: "SET_TAB", tab: "swipe" } as const);
-    close();
+    const ids = selected.length ? selected : suggestions.map((s) => s.id);
+    dispatch({ type: "START_SESSION", title: titleFor(intent), placeIds: ids });
   };
 
   return (
@@ -229,12 +253,12 @@ export default function AiPlanSheet() {
                 TripUp AI
               </p>
               <h2 className="mt-2 text-[22px] font-bold leading-7 tracking-[-0.2px] text-ink-900">
-                {headerFor(prompt)}
+                {titleFor(intent)} · for 6
               </h2>
               <p className="mt-1 truncate text-[13px] font-medium text-ink-500">“{prompt.trim()}”</p>
 
               <div className="mt-4 flex flex-col gap-3">
-                {SUGGESTIONS.map((s, i) => {
+                {suggestions.map((s, i) => {
                   const on = hearted.includes(s.id);
                   return (
                     <motion.div
@@ -297,7 +321,7 @@ export default function AiPlanSheet() {
             {/* Sticky hand-off — straight into the group's swipe session */}
             <div className="sticky bottom-0 mt-4 border-t border-line-200 bg-paper-0 px-5 pb-8 pt-3">
               <PrimaryButton full onClick={startMatch}>
-                Start a group match
+                Start a group match ({selected.length || suggestions.length})
               </PrimaryButton>
               <div className="mt-1 flex justify-center">
                 <GhostButton

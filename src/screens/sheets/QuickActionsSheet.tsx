@@ -21,8 +21,8 @@ export default function QuickActionsSheet() {
     },
     {
       icon: MapPin,
-      label: "Add spot",
-      act: () => dispatch({ type: "SET_TAB", tab: "swipe" } as const),
+      label: "Add spots from map",
+      act: () => dispatch({ type: "OPEN_SHEET", sheet: "mapPick" } as const),
     },
     {
       icon: UserPlus,

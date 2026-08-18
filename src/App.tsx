@@ -25,6 +25,7 @@ import ExpenseDetailSheet from "./screens/sheets/ExpenseDetailSheet";
 import AllMemoriesSheet from "./screens/sheets/AllMemoriesSheet";
 import FilmSheet from "./screens/sheets/FilmSheet";
 import AiPlanSheet from "./screens/sheets/AiPlanSheet";
+import MapPickSheet from "./screens/sheets/MapPickSheet";
 
 function Phone() {
   const { state } = useStore();
@@ -89,6 +90,7 @@ function Phone() {
       <AllMemoriesSheet />
       <FilmSheet />
       <AiPlanSheet />
+      <MapPickSheet />
       <BannerHost />
     </div>
   );
