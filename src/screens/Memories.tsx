@@ -101,8 +101,7 @@ export default function Memories() {
 
         {/* Trip superlatives — streak-free identity tokens (UX retention spec §5) */}
         <div
-          className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-0.5"
-          style={{ scrollbarWidth: "none" }}
+          className="hscroll -mx-5 mt-3 flex gap-2 px-5 pb-1.5 pt-0.5"
         >
           {SUPERLATIVES.map((s) => (
             <span

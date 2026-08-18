@@ -436,7 +436,7 @@ export default function SwipeDeck() {
       </div>
 
       {/* Filter chips — "Dinner" deliberately has no emoji (tofu risk) */}
-      <div className="mt-2 flex gap-2 overflow-x-auto px-5 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="hscroll mt-2 flex gap-2 px-5 py-1">
         <button
           aria-label="Filters"
           onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "filters" })}

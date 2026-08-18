@@ -86,9 +86,9 @@ export default function Home() {
         </div>
 
         {/* Up next */}
-        <div className="mt-7 px-5">
-          <h2 className="mb-3 text-lg font-bold text-ink-900">Up next</h2>
-          <div className="flex gap-3 overflow-x-auto">
+        <div className="mt-7">
+          <h2 className="mb-3 px-5 text-lg font-bold text-ink-900">Up next</h2>
+          <div className="hscroll flex gap-3.5 px-5 pb-2 pt-0.5">
             {UP_NEXT.map((t, i) => (
               <motion.button
                 key={t.id}
@@ -99,13 +99,13 @@ export default function Home() {
                     ? dispatch({ type: "PUSH_BANNER", icon: "info", text: "Ibiza Sept starts in 25 days" })
                     : dispatch({ type: "OPEN_SHEET", sheet: "newTrip" })
                 }
-                className="w-[172px] shrink-0 rounded-2xl bg-paper-0 p-3 text-left shadow-elev-1"
+                className="w-[176px] shrink-0 rounded-2xl bg-paper-0 p-3.5 text-left shadow-elev-1"
               >
-                <div className="flex h-24 items-center justify-center rounded-xl bg-paper-100 text-3xl">
+                <div className="flex h-24 items-center justify-center rounded-xl bg-paper-100">
                   <t.Icon size={20} strokeWidth={1.75} className="text-ink-500" />
                 </div>
-                <p className="mt-2.5 text-[15px] font-bold text-ink-900">{t.name}</p>
-                <p className="text-xs font-medium text-ink-500">{t.meta}</p>
+                <p className="mt-3 text-[15px] font-bold text-ink-900">{t.name}</p>
+                <p className="mt-0.5 text-xs font-medium text-ink-500">{t.meta}</p>
               </motion.button>
             ))}
           </div>
