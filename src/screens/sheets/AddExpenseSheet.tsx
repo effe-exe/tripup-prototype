@@ -35,15 +35,22 @@ function AvatarToggle({
 }) {
   return (
     <motion.button
-      className="hit44"
+      className="flex shrink-0 flex-col items-center gap-1"
       onClick={onToggle}
       whileTap={{ scale: 0.9 }}
-      animate={{ scale: on ? 1 : 0.86, opacity: on ? 1 : 0.75 }}
+      animate={{ scale: on ? 1 : 0.92, opacity: on ? 1 : 0.6 }}
       transition={{ type: "spring", stiffness: 420, damping: 26 }}
       aria-pressed={on}
       aria-label={`${MEMBERS[id].name} ${on ? "included" : "excluded"}`}
     >
-      <Avatar id={id} size={32} state={on ? "default" : "excluded"} />
+      <Avatar id={id} size={34} state={on ? "default" : "excluded"} />
+      <span
+        className={`max-w-[46px] truncate text-[10px] font-semibold leading-3 ${
+          on ? "text-ink-600" : "text-ink-500 line-through"
+        }`}
+      >
+        {MEMBERS[id].name}
+      </span>
     </motion.button>
   );
 }
@@ -161,23 +168,26 @@ export default function AddExpenseSheet() {
                         {fmtEUR(it.amount)}
                       </span>
                     </div>
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      <div className="flex gap-2">
-                        {ALL.map((id) => (
-                          <AvatarToggle
-                            key={id}
-                            id={id}
-                            on={shared[it.key].includes(id)}
-                            onToggle={() => toggle(it.key, id)}
-                          />
-                        ))}
-                      </div>
+                    <div className="mt-3 flex items-start justify-between gap-1">
+                      {ALL.map((id) => (
+                        <AvatarToggle
+                          key={id}
+                          id={id}
+                          on={shared[it.key].includes(id)}
+                          onToggle={() => toggle(it.key, id)}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-3 flex items-baseline justify-between border-t border-line-200 pt-2.5">
+                      <span className="text-xs font-medium text-ink-500">
+                        Split {n} {n === 1 ? "way" : "ways"}
+                      </span>
                       <motion.span
                         key={n}
                         initial={{ opacity: 0.4, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                        className="tabular shrink-0 text-[13px] font-semibold text-ink-600"
+                        className="tabular text-[13px] font-semibold text-ink-900"
                       >
                         {fmtEUR(each)} each
                       </motion.span>

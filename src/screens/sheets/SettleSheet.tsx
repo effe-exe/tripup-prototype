@@ -44,7 +44,8 @@ export default function SettleSheet() {
   const tripTotal = state.expenses.reduce((s, e) => s + e.amount, 0);
 
   return (
-    <BottomSheet open={open} onClose={() => dispatch({ type: "CLOSE_SHEET" })} full>
+    <>
+    <BottomSheet open={open && !state.allSquare} onClose={() => dispatch({ type: "CLOSE_SHEET" })} full>
       <div className="relative min-h-full">
         {/* Settle board */}
         <div className="px-5 pb-8 pt-2">
@@ -91,14 +92,18 @@ export default function SettleSheet() {
           </p>
         </div>
 
-        {/* Wrap takeover — single pass once everyone is square */}
-        <AnimatePresence>
-          {state.allSquare && (
+      </div>
+    </BottomSheet>
+
+    {/* Wrap takeover — owns the whole screen, single pass once everyone is square */}
+    <AnimatePresence>
+      {open && state.allSquare && (
+        <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="absolute inset-0 overflow-hidden rounded-t-3xl"
+              className="absolute inset-0 z-[70] overflow-hidden"
               style={{ background: "linear-gradient(160deg, #FF5A45 0%, #FFB43A 100%)" }}
             >
               {CONFETTI.map((c, i) => (
@@ -162,9 +167,9 @@ export default function SettleSheet() {
                 </motion.div>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </BottomSheet>
+        </>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

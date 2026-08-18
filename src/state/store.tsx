@@ -440,13 +440,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (state.poll.status === "open") {
       once("votes", () => {
-        after(2000, () => dispatch({ type: "VOTE", member: "nic", restaurantId: "vintem" }));
-        after(4000, () => {
-          dispatch({ type: "VOTE", member: "maya", restaurantId: "marealta" });
-          dispatch({ type: "VOTE", member: "tomas", restaurantId: "terraco" });
+        /* Vote for whatever options this poll actually has - the shortlist is
+           built by the group, so nothing here may assume the dinner three.
+           The leader takes three friend votes; Ari's makes it four. */
+        const ids = state.poll.options.map((o) => o.restaurantId);
+        if (!ids.length) return;
+        const leaderIdx = Math.max(0, ids.indexOf("marealta") >= 0 ? ids.indexOf("marealta") : Math.min(1, ids.length - 1));
+        const leader = ids[leaderIdx];
+        const others = ids.filter((_, i) => i !== leaderIdx);
+        const runnerA = others[0] ?? leader;
+        const runnerB = others[1] ?? runnerA;
+
+        after(2600, () => dispatch({ type: "VOTE", member: "nic", restaurantId: runnerA }));
+        after(6000, () => {
+          dispatch({ type: "VOTE", member: "maya", restaurantId: leader });
+          dispatch({ type: "VOTE", member: "tomas", restaurantId: runnerB });
         });
-        after(7000, () => dispatch({ type: "VOTE", member: "zoe", restaurantId: "marealta" }));
-        after(10000, () => dispatch({ type: "VOTE", member: "ren", restaurantId: "marealta" }));
+        after(10000, () => dispatch({ type: "VOTE", member: "zoe", restaurantId: leader }));
+        after(14000, () => dispatch({ type: "VOTE", member: "ren", restaurantId: leader }));
       });
     }
   }, [state.poll.status]);
@@ -456,7 +467,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (state.poll.status === "open" && voteCount >= 6) {
       once("close", () =>
-        after(1500, () => {
+        after(2800, () => {
           dispatch({ type: "CLOSE_POLL" });
           dispatch({ type: "PUSH_BANNER", icon: "poll", text: "Maré Alta won - added to tonight, 20:45" });
           dispatch({ type: "PUSH_BUZZ", icon: "poll", text: "Poll closed: Maré Alta won 4–1–1", time: "20:15" });
