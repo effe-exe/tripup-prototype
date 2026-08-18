@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from "../components/ui";
 import { rowEnter, tapCard } from "../components/motion";
-import { photos, RESTAURANTS } from "../data/mock";
+import { PLACES } from "../data/mock";
 import type { ItineraryItem } from "../data/types";
 import { useStore } from "../state/store";
 
@@ -46,9 +46,11 @@ export default function TripHub() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
 
   const sorted = [...state.poll.options].sort((a, b) => b.votes.length - a.votes.length);
-  const leadName = RESTAURANTS.find((r) => r.id === sorted[0]?.restaurantId)?.name;
+  const lead = sorted[0] ? PLACES[sorted[0].restaurantId] : undefined;
   const leadText =
-    voteCount === 0 ? "3 options · 0/6 voted" : `${leadName} leads · ${voteCount}/6 voted`;
+    voteCount === 0
+      ? `${state.poll.options.length} options · 0/6 voted`
+      : `${lead?.name ?? "Someone"} leads · ${voteCount}/6 voted`;
 
   const tripTotal = state.expenses.reduce((sum, e) => sum + e.amount, 0);
 
@@ -89,7 +91,7 @@ export default function TripHub() {
         trailing={
           <button
             onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "tripSettings" })}
-            className="p-1 text-ink-900"
+            className="hit44 p-1 text-ink-900"
           >
             <MoreVertical size={22} strokeWidth={1.75} />
           </button>
@@ -127,7 +129,7 @@ export default function TripHub() {
           </AnimatePresence>
           <button
             onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "addMember" })}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-line-300 text-ink-500"
+            className="hit44 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-line-300 text-ink-500"
           >
             <Plus size={18} strokeWidth={1.75} />
           </button>
@@ -169,12 +171,12 @@ export default function TripHub() {
               </div>
               <div className="flex items-center gap-3">
                 <img
-                  src={photos.seafood}
+                  src={lead?.photo}
                   alt=""
                   className="h-14 w-14 shrink-0 rounded-xl object-cover"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-base font-bold text-ink-900">Dinner tonight</p>
+                  <p className="text-base font-bold text-ink-900">{state.poll.title}</p>
                   <p className="truncate text-xs font-medium text-ink-500">{leadText}</p>
                 </div>
                 <PrimaryButton
@@ -289,7 +291,7 @@ export default function TripHub() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={() => dispatch({ type: "SET_TAB", tab: "split" })}
-            className="inline-flex items-center gap-2 rounded-full bg-paper-0 px-4 py-2.5 text-[13px] font-semibold tabular text-ink-600 shadow-elev-1"
+            className="hit44 inline-flex items-center gap-2 rounded-full bg-paper-0 px-4 py-2.5 text-[13px] font-semibold tabular text-ink-600 shadow-elev-1"
           >
             <span className="text-sunset-700">Trip total €{tripTotal.toLocaleString("en-US")}</span>
             · view in Split →
@@ -348,7 +350,7 @@ function DinnerRow({
             onClick={onTap}
             className="flex w-full items-center gap-3 rounded-2xl border-[1.5px] border-dashed border-line-300 p-3 text-left"
           >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-paper-100 text-base font-bold text-ink-400">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-paper-100 text-base font-bold text-ink-500">
               ?
             </div>
             <div className="min-w-0 flex-1">

@@ -100,7 +100,7 @@ export default function ExpenseDetailSheet() {
                     <Avatar id={id} size={32} state={excluded ? "excluded" : "default"} />
                     <span
                       className={`flex-1 truncate text-sm font-semibold ${
-                        excluded ? "text-ink-400" : "text-ink-900"
+                        excluded ? "text-ink-500" : "text-ink-900"
                       }`}
                     >
                       {MEMBERS[id].name}
@@ -112,7 +112,7 @@ export default function ExpenseDetailSheet() {
                     </span>
                     <span
                       className={`tabular shrink-0 text-sm font-bold ${
-                        excluded ? "text-ink-400" : "text-ink-900"
+                        excluded ? "text-ink-500" : "text-ink-900"
                       }`}
                     >
                       {fmtEUR(share)}

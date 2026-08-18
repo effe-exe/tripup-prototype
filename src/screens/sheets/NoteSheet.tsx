@@ -28,7 +28,7 @@ export default function NoteSheet() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Best trip ever because…"
           rows={4}
-          className="w-full resize-none rounded-2xl border border-line-300 bg-paper-50 p-4 text-[15px] font-medium leading-snug text-ink-900 placeholder:text-ink-400 focus:border-sunset-500 focus:outline-none"
+          className="w-full resize-none rounded-2xl border border-line-300 bg-paper-50 p-4 text-[15px] font-medium leading-snug text-ink-900 placeholder:text-ink-500 focus:border-sunset-500 focus:outline-none"
         />
         <PrimaryButton full onClick={submit}>
           Add note

@@ -11,7 +11,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   return (
     <button
       onClick={() => onChange(!on)}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+      className={`hit44 h-7 w-12 shrink-0 rounded-full transition-colors ${
         on ? "bg-lagoon-500" : "bg-line-300"
       }`}
     >

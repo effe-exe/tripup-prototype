@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { GhostButton, PrimaryButton, StatusBar } from "../../components/ui";
-import { RESTAURANTS, useStore } from "../../state/store";
+import { useStore } from "../../state/store";
+import { PLACES } from "../../data/mock";
 import type { Tab } from "../../state/store";
 
 const SHORT_NAME: Record<string, string> = {
@@ -37,7 +38,7 @@ export default function PollResultTakeover() {
   }, [open]);
 
   const winnerId = state.poll.winnerId ?? "marealta";
-  const winner = RESTAURANTS.find((r) => r.id === winnerId)!;
+  const winner = PLACES[winnerId] ?? PLACES.marealta;
   const winnerVotes =
     state.poll.options.find((o) => o.restaurantId === winnerId)?.votes.length ?? 0;
   const runners = state.poll.options
@@ -129,7 +130,7 @@ export default function PollResultTakeover() {
                       }}
                       className="rounded-full bg-paper-100 px-2.5 py-1 text-xs font-semibold text-ink-600"
                     >
-                      {SHORT_NAME[o.restaurantId] ?? o.restaurantId}{" "}
+                      {SHORT_NAME[o.restaurantId] ?? PLACES[o.restaurantId]?.name ?? o.restaurantId}{" "}
                       <span className="tabular">{o.votes.length}</span>
                     </motion.span>
                   ))}

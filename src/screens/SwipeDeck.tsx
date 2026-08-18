@@ -189,7 +189,7 @@ function CardBack({ rest, onFlipBack }: { rest: Restaurant; onFlipBack: () => vo
         <img src={rest.photo} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />
       </div>
 
-      <p className="mt-4 text-xs font-bold text-ink-400">Sample menu</p>
+      <p className="mt-4 text-xs font-bold text-ink-500">Sample menu</p>
       <div className="mt-1.5 flex flex-col gap-1.5">
         {d.menu.map((m) => (
           <div key={m.label} className="flex items-baseline justify-between">
@@ -199,7 +199,7 @@ function CardBack({ rest, onFlipBack }: { rest: Restaurant; onFlipBack: () => vo
         ))}
       </div>
 
-      <p className="mt-4 text-xs font-bold text-ink-400">What people say</p>
+      <p className="mt-4 text-xs font-bold text-ink-500">What people say</p>
       <div className="mt-1.5 flex flex-col gap-2">
         {d.reviews.map((r) => (
           <div key={r.by} className="rounded-2xl bg-paper-50 px-3.5 py-2.5">
@@ -356,7 +356,7 @@ export default function SwipeDeck() {
     .filter(([, members]) => members.length > 0)
     .map(([id, members]) => ({
       id,
-      name: SHORT_NAME[id] ?? id,
+      name: SHORT_NAME[id] ?? PLACES[id]?.name ?? id,
       count: members.length + 1, // + Ari's side of the match
     }));
   const trayThumb = trayEntries.length ? PLACES[trayEntries[0].id] : undefined;
@@ -436,11 +436,11 @@ export default function SwipeDeck() {
       </div>
 
       {/* Filter chips — "Dinner" deliberately has no emoji (tofu risk) */}
-      <div className="mt-3 flex gap-2 px-5">
+      <div className="mt-2 flex gap-2 overflow-x-auto px-5 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <button
           aria-label="Filters"
           onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "filters" })}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line-300 bg-paper-0 text-ink-600 active:bg-paper-100"
+          className="hit44 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line-300 bg-paper-0 text-ink-600 active:bg-paper-100"
         >
           <SlidersHorizontal size={15} strokeWidth={2.25} />
         </button>
@@ -453,7 +453,7 @@ export default function SwipeDeck() {
       </div>
 
       {/* Card deck */}
-      <div className="relative mx-5 mt-3.5 h-[470px]">
+      <div className="relative mx-5 mt-2.5 h-[470px]">
         {deck
           .slice(0, 3)
           .map((r, i) =>
@@ -506,7 +506,7 @@ export default function SwipeDeck() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             onClick={onUndo}
-            className="absolute left-2 top-[52px] z-20 flex items-center gap-1 rounded-full bg-paper-0 py-1.5 pl-2.5 pr-3 text-[13px] font-semibold text-ink-600 shadow-elev-2 active:bg-paper-100"
+            className="absolute left-2 top-[52px] z-20 flex min-h-11 items-center gap-1 rounded-full bg-paper-0 py-1.5 pl-3 pr-3.5 text-[13px] font-semibold text-ink-600 shadow-elev-2 active:bg-paper-100"
           >
             <Undo2 size={14} strokeWidth={2.25} />
             Undo

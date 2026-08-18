@@ -110,7 +110,7 @@ export default function AllMemoriesSheet() {
         <button
           onClick={close}
           aria-label="Close"
-          className="-mr-1.5 flex h-9 w-9 items-center justify-center rounded-full text-ink-500 active:bg-paper-100"
+          className="hit44 -mr-1.5 flex h-9 w-9 items-center justify-center rounded-full text-ink-500 active:bg-paper-100"
         >
           <X size={20} strokeWidth={2} />
         </button>

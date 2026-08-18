@@ -47,13 +47,17 @@ export default function CreatePollSheet() {
                 </div>
                 <button
                   aria-label={`Remove ${r.name}`}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-400 active:bg-paper-100"
+                  onClick={() => dispatch({ type: "REMOVE_POLL_OPTION", restaurantId: r.id })}
+                  className="hit44 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-400 active:bg-paper-100"
                 >
                   <X size={18} strokeWidth={2} />
                 </button>
               </div>
             ))}
-            <button className="flex h-14 w-full items-center justify-center rounded-2xl border border-dashed border-line-300 text-sm font-semibold text-ink-500 active:bg-paper-100">
+            <button
+              onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "mapPick" })}
+              className="flex h-14 w-full items-center justify-center rounded-2xl border border-dashed border-line-300 text-sm font-semibold text-ink-500 active:bg-paper-100"
+            >
               <Plus size={16} strokeWidth={2.25} className="mr-1.5" />
               Add option
             </button>

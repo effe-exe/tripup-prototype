@@ -32,7 +32,7 @@ function Phone() {
   const inTrip = state.screen === "trip";
   return (
     <div
-      className="relative flex flex-col overflow-hidden bg-paper-50 max-[450px]:h-dvh max-[450px]:w-full min-[451px]:h-[852px] min-[451px]:w-[393px] min-[451px]:rounded-[54px] min-[451px]:border-[10px] min-[451px]:border-[#2A2624] min-[451px]:shadow-2xl"
+      className="relative flex flex-col overflow-hidden bg-paper-50 max-[450px]:h-dvh max-[450px]:w-full min-[451px]:box-content min-[451px]:h-[852px] min-[451px]:w-[393px] min-[451px]:rounded-[54px] min-[451px]:border-[10px] min-[451px]:border-[#2A2624] min-[451px]:shadow-2xl"
       id="phone"
     >
       {/* Screen-level push: the arriving screen slides in from the right and

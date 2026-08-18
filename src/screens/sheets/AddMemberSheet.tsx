@@ -66,7 +66,18 @@ export default function AddMemberSheet() {
           )}
         </AnimatePresence>
 
-        <PrimaryButton full>Share link via…</PrimaryButton>
+        <PrimaryButton
+          full
+          onClick={() =>
+            dispatch({
+              type: "PUSH_BANNER",
+              icon: "join",
+              text: "Invite link copied - send it to anyone",
+            })
+          }
+        >
+          Share link via…
+        </PrimaryButton>
 
         <div className="flex flex-col items-center gap-2 py-1">
           <div className="h-[140px] w-[140px] rounded-2xl border border-line-200 bg-paper-0 p-2.5">
@@ -104,7 +115,7 @@ export default function AddMemberSheet() {
 
         <div className="flex h-12 items-center gap-2.5 rounded-xl border border-line-300 bg-paper-0 px-4">
           <Search size={18} strokeWidth={1.75} className="text-ink-400" />
-          <span className="text-[15px] text-ink-400">Search contacts</span>
+          <span className="text-[15px] text-ink-500">Search contacts</span>
         </div>
 
         <div className="flex gap-2">

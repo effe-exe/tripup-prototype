@@ -53,9 +53,8 @@ export default function MapPickSheet() {
     }
   };
 
-  const cta = state.session
-    ? "Add " + (picked.length || "") + (picked.length === 1 ? " spot" : " spots")
-    : "Start match with " + (picked.length || "") + (picked.length === 1 ? " spot" : " spots");
+  const spots = picked.length + (picked.length === 1 ? " spot" : " spots");
+  const cta = state.session ? "Add " + spots : "Start match with " + spots;
 
   return (
     <BottomSheet open={open} full onClose={() => dispatch({ type: "CLOSE_SHEET" })}>
@@ -95,7 +94,7 @@ export default function MapPickSheet() {
                   style={{ left: x + "%", top: y + "%" }}
                 >
                   <span
-                    className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold shadow-elev-2 ${
+                    className={`hit44 flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold shadow-elev-2 ${
                       on ? "bg-sunset-500 text-white" : "bg-paper-0 text-ink-600"
                     }`}
                   >
@@ -114,7 +113,7 @@ export default function MapPickSheet() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search places in Lisbon"
-              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink-900 outline-none placeholder:text-ink-400"
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink-900 outline-none placeholder:text-ink-500"
             />
           </div>
 
@@ -144,7 +143,7 @@ export default function MapPickSheet() {
                     onClick={() => toggle(p.id)}
                     aria-pressed={on}
                     aria-label={(on ? "Remove " : "Add ") + p.name}
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                    className={`hit44 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                       on ? "bg-sunset-500 text-white" : "bg-paper-100 text-ink-600"
                     }`}
                   >

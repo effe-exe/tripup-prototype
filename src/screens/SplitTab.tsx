@@ -95,7 +95,7 @@ export default function SplitTab() {
         <h1 className="min-w-0 flex-1 truncate text-[20px] font-bold tracking-[-0.2px] text-ink-900">
           Split · Lisboa com Amigos
         </h1>
-        <span className="tabular shrink-0 rounded-full bg-paper-100 px-3 py-1.5 text-xs font-semibold text-ink-600">
+        <span className="tabular shrink-0 rounded-full bg-paper-100 px-2.5 py-1.5 text-xs font-semibold text-ink-600">
           <AnimatedNumber value={tripTotal} format={fmtEURWhole} /> trip total
         </span>
       </div>
@@ -113,7 +113,11 @@ export default function SplitTab() {
         </LayoutGroup>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-32 pt-3">
+      <div
+        className={`min-h-0 flex-1 overflow-y-auto px-5 pt-3 ${
+          state.splitSegment === "balances" ? "pb-44" : "pb-32"
+        }`}
+      >
         {state.splitSegment === "expenses" ? (
           <div className="flex flex-col gap-2.5">
             {newestFirst.map((e, i) => (
@@ -156,7 +160,7 @@ export default function SplitTab() {
                         whileTap={tapCard}
                         transition={springFirm}
                         onClick={() => setOpenMember(isOpen ? null : id)}
-                        className="flex w-full items-center gap-2.5 text-left"
+                        className="hit44 flex w-full items-center gap-2.5 text-left"
                       >
                         <Avatar id={id} size={36} />
                         <span className="w-14 shrink-0 truncate text-sm font-semibold text-ink-900">
@@ -178,7 +182,7 @@ export default function SplitTab() {
                           )}
                         </div>
                         {zero ? (
-                          <span className="tabular shrink-0 text-sm font-semibold text-ink-400">
+                          <span className="tabular shrink-0 text-sm font-semibold text-ink-500">
                             €0
                           </span>
                         ) : (
@@ -205,7 +209,7 @@ export default function SplitTab() {
                               <div className="ml-[46px] rounded-2xl bg-paper-50 px-3.5 py-3">
                                 {paid.length > 0 && (
                                   <>
-                                    <p className="text-[11px] font-bold text-ink-400">Paid</p>
+                                    <p className="text-[11px] font-bold text-ink-500">Paid</p>
                                     {paid.map((e) => (
                                       <div
                                         key={e.id}
@@ -222,7 +226,7 @@ export default function SplitTab() {
                                   </>
                                 )}
                                 <p
-                                  className={`text-[11px] font-bold text-ink-400 ${
+                                  className={`text-[11px] font-bold text-ink-500 ${
                                     paid.length ? "mt-2.5" : ""
                                   }`}
                                 >
@@ -246,7 +250,7 @@ export default function SplitTab() {
                                   <span
                                     className={`tabular text-xs font-bold ${
                                       zero
-                                        ? "text-ink-400"
+                                        ? "text-ink-500"
                                         : v < 0
                                           ? "text-error-600"
                                           : "text-lagoon-700"
@@ -299,14 +303,6 @@ export default function SplitTab() {
               )}
             </div>
 
-            <PrimaryButton
-              full
-              disabled={!hasTransfers}
-              onClick={() => dispatch({ type: "START_SETTLE" })}
-            >
-              Settle up
-            </PrimaryButton>
-
             <div className="flex justify-center">
               <GhostButton onClick={() => setShowMath((v) => !v)}>
                 {showMath ? "Hide the math" : "See the math"}
@@ -348,6 +344,23 @@ export default function SplitTab() {
           </div>
         )}
       </div>
+
+      {/* Primary CTA rides above the tab bar so it is reachable without
+          scrolling the balance list — same sticky-footer placement the
+          sheets use. */}
+      {state.splitSegment === "balances" && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-[88px] z-20 bg-gradient-to-t from-paper-50 via-paper-50 to-transparent px-5 pb-3 pt-6">
+          <div className="pointer-events-auto">
+            <PrimaryButton
+              full
+              disabled={!hasTransfers}
+              onClick={() => dispatch({ type: "START_SETTLE" })}
+            >
+              Settle up
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
 
       <HomeIndicator />
     </div>

@@ -31,6 +31,7 @@ export default function Home() {
       <div className="flex shrink-0 items-center justify-between px-5 pb-2 pt-1">
         <h1 className="text-[26px] font-extrabold tracking-[-0.4px] text-ink-900">Hey Ari</h1>
         <motion.button
+          className="hit44"
           whileTap={{ scale: 0.94 }}
           onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "profile" })}
         >

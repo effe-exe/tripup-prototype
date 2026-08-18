@@ -61,7 +61,7 @@ export default function FilmSheet() {
             <button
               onClick={close}
               aria-label="Close film"
-              className="-mr-1.5 flex h-9 w-9 items-center justify-center rounded-full text-white/80 active:bg-white/10"
+              className="hit44 -mr-1.5 flex h-9 w-9 items-center justify-center rounded-full text-white/80 active:bg-white/10"
             >
               <X size={20} strokeWidth={2} />
             </button>
@@ -125,7 +125,7 @@ export default function FilmSheet() {
             <button
               onClick={() => setPlaying((p) => !p)}
               aria-label={playing ? "Pause film" : "Play film"}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white active:bg-white/25"
+              className="hit44 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white active:bg-white/25"
             >
               {playing ? (
                 <Pause size={15} className="fill-white" />

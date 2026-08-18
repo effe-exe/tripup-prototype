@@ -9,7 +9,7 @@ const spring = { type: "spring", stiffness: 300, damping: 30 } as const;
 function Toggle({ on }: { on: boolean }) {
   return (
     <span
-      className={`relative inline-block h-7 w-12 shrink-0 rounded-full transition-colors ${
+      className={`hit44 inline-block h-7 w-12 shrink-0 rounded-full transition-colors ${
         on ? "bg-lagoon-500" : "bg-line-300"
       }`}
     >
@@ -76,7 +76,7 @@ export default function ProfileSheet() {
         {/* Settings */}
         <div className="mt-4 divide-y divide-line-200">
           <SettingsRow icon={Bell} label="Notifications" trailing={<Toggle on />} />
-          <SettingsRow icon={CreditCard} label="Payment methods" value="Apple Pay ᯤ · IBAN ···1204" />
+          <SettingsRow icon={CreditCard} label="Payment methods" value="Apple Pay · IBAN ···1204" />
           <SettingsRow icon={Shield} label="Privacy" />
         </div>
 

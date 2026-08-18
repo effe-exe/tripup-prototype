@@ -57,6 +57,22 @@ body {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
+/* Hit area — lifts a small control to the 44px minimum touch target without
+   changing a single pixel of its layout. The overlay only ever grows into
+   the dead space around the control, never over a neighbour's own box. */
+.hit44 {
+  position: relative;
+}
+.hit44::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+
 /* Gentle motion only — respect reduced motion (hard accessibility rule) */
 @media (prefers-reduced-motion: reduce) {
   *,

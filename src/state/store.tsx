@@ -12,6 +12,7 @@ import type {
 } from "../data/types";
 import {
   MEMBERS,
+  PLACES,
   RESTAURANTS,
   dinnerExpense,
   initialBuzz,
@@ -146,6 +147,7 @@ type Action =
   | { type: "SWIPE_UNDO" }
   | { type: "START_SESSION"; title: string; placeIds: string[] }
   | { type: "ADD_TO_SESSION"; placeId: string }
+  | { type: "REMOVE_POLL_OPTION"; restaurantId: string }
   | { type: "SET_TICKER"; member: MemberId; verb: string }
   | { type: "AMBIENT_LIKE"; member: MemberId; restaurantId: string; label: string }
   | { type: "SEND_POLL" }
@@ -219,6 +221,24 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         session: { ...state.session, placeIds: [...state.session.placeIds, action.placeId] },
+        // a draft poll mirrors the shortlist, same as START_SESSION seeds it
+        poll:
+          state.poll.status === "draft"
+            ? {
+                ...state.poll,
+                options: [...state.poll.options, { restaurantId: action.placeId, votes: [] }],
+              }
+            : state.poll,
+      };
+    }
+    case "REMOVE_POLL_OPTION": {
+      if (state.poll.status !== "draft" || state.poll.options.length <= 2) return state;
+      return {
+        ...state,
+        poll: {
+          ...state.poll,
+          options: state.poll.options.filter((o) => o.restaurantId !== action.restaurantId),
+        },
       };
     }
     case "SET_TICKER":
@@ -242,28 +262,30 @@ function reducer(state: State, action: Action): State {
       };
     }
     case "SWIPE_UNDO": {
-      if (state.swipe.index === 0) return state;
-      const prevRest = RESTAURANTS[state.swipe.index - 1];
+      // The deck is the session shortlist — never the restaurant list, which
+      // only matches it by luck when the session happens to be the dinner three.
+      const prevId = state.session?.placeIds[state.swipe.index - 1];
+      if (state.swipe.index === 0 || !prevId) return state;
       return {
         ...state,
         swipe: {
           ...state.swipe,
           index: state.swipe.index - 1,
-          liked: state.swipe.liked.filter((id) => id !== prevRest.id),
-          passed: state.swipe.passed.filter((id) => id !== prevRest.id),
+          liked: state.swipe.liked.filter((id) => id !== prevId),
+          passed: state.swipe.passed.filter((id) => id !== prevId),
         },
       };
     }
     case "SWIPE": {
-      const rest = RESTAURANTS[state.swipe.index];
-      if (!rest) return state;
+      const id = state.session?.placeIds[state.swipe.index];
+      if (!id) return state;
       const swipe = { ...state.swipe, index: state.swipe.index + 1 };
       if (action.dir === "like") {
-        swipe.liked = [...swipe.liked, rest.id];
-        const prev = swipe.matches[rest.id] ?? [];
-        swipe.matches = { ...swipe.matches, [rest.id]: prev };
+        swipe.liked = [...swipe.liked, id];
+        const prev = swipe.matches[id] ?? [];
+        swipe.matches = { ...swipe.matches, [id]: prev };
       } else {
-        swipe.passed = [...swipe.passed, rest.id];
+        swipe.passed = [...swipe.passed, id];
       }
       return { ...state, swipe };
     }
@@ -271,6 +293,9 @@ function reducer(state: State, action: Action): State {
       return { ...state, sheet: null, poll: { ...state.poll, status: "open" } };
     case "VOTE": {
       if (state.poll.status !== "open") return state;
+      // a scripted vote for an option this poll doesn't carry must not silently
+      // strip the voter's existing choice
+      if (!state.poll.options.some((o) => o.restaurantId === action.restaurantId)) return state;
       const options = state.poll.options.map((o) => ({
         ...o,
         votes: o.votes.filter((v) => v !== action.member),
@@ -282,7 +307,8 @@ function reducer(state: State, action: Action): State {
     case "CLOSE_POLL": {
       if (state.poll.status !== "open") return state;
       const winner = [...state.poll.options].sort((a, b) => b.votes.length - a.votes.length)[0];
-      const rest = RESTAURANTS.find((r) => r.id === winner.restaurantId)!;
+      const rest = winner && PLACES[winner.restaurantId];
+      if (!rest) return state;
       const itinerary = state.itinerary.map((it) =>
         it.id === "it-dinner"
           ? {

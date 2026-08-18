@@ -56,7 +56,7 @@ export default function NewTripSheet() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ibiza Sept"
-            className="h-12 rounded-xl border border-line-300 bg-paper-0 px-4 text-[15px] font-medium text-ink-900 outline-none placeholder:text-ink-400 focus:border-sunset-500"
+            className="h-12 rounded-xl border border-line-300 bg-paper-0 px-4 text-[15px] font-medium text-ink-900 outline-none placeholder:text-ink-500 focus:border-sunset-500"
           />
         </div>
 
@@ -69,7 +69,7 @@ export default function NewTripSheet() {
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
               placeholder="Where to?"
-              className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-ink-900 outline-none placeholder:text-ink-400"
+              className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-ink-900 outline-none placeholder:text-ink-500"
             />
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function NewTripSheet() {
                 text: "Invite link copied - send it to anyone",
               })
             }
-            className="flex items-center gap-3 text-left"
+            className="hit44 flex items-center gap-3 text-left"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sunset-50 text-sunset-700">
               <Link2 size={17} strokeWidth={2} />
@@ -147,12 +147,12 @@ export default function NewTripSheet() {
               onChange={(e) => setGuestName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addGuest()}
               placeholder="Or add by name"
-              className="h-10 min-w-0 flex-1 rounded-xl border border-line-300 bg-paper-0 px-3 text-sm font-medium text-ink-900 outline-none placeholder:text-ink-400 focus:border-sunset-500"
+              className="h-10 min-w-0 flex-1 rounded-xl border border-line-300 bg-paper-0 px-3 text-sm font-medium text-ink-900 outline-none placeholder:text-ink-500 focus:border-sunset-500"
             />
             <motion.button
               whileTap={{ scale: 0.94 }}
               onClick={addGuest}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sunset-500 text-white"
+              className="hit44 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sunset-500 text-white"
             >
               <Plus size={18} strokeWidth={2.25} />
             </motion.button>

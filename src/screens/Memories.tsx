@@ -61,20 +61,26 @@ export default function Memories() {
       <StatusBar />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2">
+      <div className="flex items-center justify-between px-5 py-2">
         <button
           onClick={() => dispatch({ type: "NAV_HOME" })}
-          className="flex items-center gap-0.5 py-1 pr-2 text-ink-900"
+          className="hit44 flex items-center gap-0.5 py-1 pr-2 text-ink-900"
         >
           <ChevronLeft size={22} strokeWidth={2} />
           <span className="text-base font-semibold">All trips</span>
         </button>
-        <button className="p-1.5 text-ink-900" aria-label="Share recap">
+        <button
+          onClick={() =>
+            dispatch({ type: "PUSH_BANNER", icon: "photo", text: "Recap link copied - share the trip" })
+          }
+          className="hit44 p-1.5 text-ink-900"
+          aria-label="Share recap"
+        >
           <Share size={20} strokeWidth={1.9} />
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-14">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-14">
         {/* Wrap hero */}
         <div
           className="rounded-3xl px-5 py-6"
@@ -95,7 +101,7 @@ export default function Memories() {
 
         {/* Trip superlatives — streak-free identity tokens (UX retention spec §5) */}
         <div
-          className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-0.5"
+          className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-0.5"
           style={{ scrollbarWidth: "none" }}
         >
           {SUPERLATIVES.map((s) => (
@@ -132,7 +138,7 @@ export default function Memories() {
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 onClick={createFilm}
-                className="h-9 shrink-0 rounded-full bg-sunset-500 px-4 text-sm font-semibold text-white active:bg-sunset-600"
+                className="hit44 h-9 shrink-0 rounded-full bg-sunset-500 px-4 text-sm font-semibold text-white active:bg-sunset-600"
               >
                 Create
               </motion.button>
@@ -144,7 +150,7 @@ export default function Memories() {
                 transition={{ type: "spring", stiffness: 300, damping: 24 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "film" })}
-                className="h-9 shrink-0 rounded-full bg-sunset-500 px-4 text-sm font-semibold text-white active:bg-sunset-600"
+                className="hit44 h-9 shrink-0 rounded-full bg-sunset-500 px-4 text-sm font-semibold text-white active:bg-sunset-600"
               >
                 Watch
               </motion.button>
@@ -167,7 +173,7 @@ export default function Memories() {
           <p className="tabular text-[13px] font-bold text-ink-900">Memories · {photoCount} photos</p>
           <button
             onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "allMemories" })}
-            className="text-[13px] font-semibold text-sunset-700"
+            className="hit44 text-[13px] font-semibold text-sunset-700"
           >
             See all →
           </button>
@@ -223,7 +229,7 @@ export default function Memories() {
                 {i === 0 ? (
                   <button
                     onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "note" })}
-                    className="mt-1.5 text-[13px] font-medium text-ink-500 active:text-ink-600"
+                    className="hit44 mt-1.5 text-[13px] font-medium text-ink-500 active:text-ink-600"
                   >
                     {MEMBERS[n.by].name} · leave your note →
                   </button>
@@ -239,7 +245,7 @@ export default function Memories() {
         <div className="mt-5 flex justify-center pb-2">
           <button
             onClick={() => dispatch({ type: "OPEN_TRIP" })}
-            className="text-[13px] font-semibold text-ink-500 active:text-ink-600"
+            className="hit44 text-[13px] font-semibold text-ink-500 active:text-ink-600"
           >
             Trip details →
           </button>

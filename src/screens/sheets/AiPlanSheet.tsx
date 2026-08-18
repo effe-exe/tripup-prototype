@@ -166,7 +166,7 @@ export default function AiPlanSheet() {
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={3}
                 placeholder="Tell me the vibe, the time, the budget…"
-                className="mt-4 w-full resize-none rounded-2xl border border-line-300 bg-paper-0 px-4 py-3.5 text-base font-medium leading-6 text-ink-900 placeholder:font-normal placeholder:text-ink-400 focus:border-sunset-300 focus:outline-none"
+                className="mt-4 w-full resize-none rounded-2xl border border-line-300 bg-paper-0 px-4 py-3.5 text-base font-medium leading-6 text-ink-900 placeholder:font-normal placeholder:text-ink-500 focus:border-sunset-300 focus:outline-none"
               />
 
               <p className="mt-4 text-[13px] font-semibold text-ink-600">Try one of these</p>
@@ -293,7 +293,7 @@ export default function AiPlanSheet() {
                         onClick={() => toggleHeart(s.id)}
                         aria-pressed={on}
                         aria-label={`${on ? "Unsave" : "Save"} ${s.name}`}
-                        className="-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full active:bg-paper-100"
+                        className="hit44 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full active:bg-paper-100"
                       >
                         <Heart
                           size={20}

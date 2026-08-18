@@ -226,7 +226,7 @@ export function GhostButton({
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`rounded-full px-5 py-2.5 text-base font-semibold active:bg-sunset-50 ${
+      className={`inline-flex min-h-11 items-center rounded-full px-5 py-2.5 text-base font-semibold active:bg-sunset-50 ${
         destructive ? "text-error-600" : "text-sunset-700"
       }`}
     >
@@ -251,7 +251,7 @@ export function Chip({
       whileTap={tapChip}
       transition={springFirm}
       onClick={onClick}
-      className={`h-9 shrink-0 rounded-full px-3.5 text-[13px] font-semibold transition-colors ${
+      className={`hit44 h-9 shrink-0 rounded-full px-3.5 text-[13px] font-semibold transition-colors ${
         selected
           ? "border-[1.5px] border-sunset-500 bg-sunset-50 text-sunset-700"
           : "border border-line-300 bg-paper-0 text-ink-600 active:bg-paper-100"
@@ -315,7 +315,7 @@ export function Segmented<T extends string>({
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`relative flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
+          className={`hit44 flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
             value === o.value ? "text-white" : "text-ink-600"
           }`}
         >
@@ -337,26 +337,68 @@ export function Segmented<T extends string>({
 
 /** On a real phone (≤450px, full-bleed) the device draws its own status bar —
  *  the faux one collapses to a safe-area spacer instead. */
+/* iOS 17/18 status bar at Apple's real proportions: time optically centred in
+   the left ear, 125x37 Dynamic Island, then cellular (4 bars) / wi-fi (3 arcs
+   + dot) / battery (capsule, fill, contact tip). Hidden on real phones
+   (<=450px), where the device draws its own. */
 export function StatusBar({ light }: { light?: boolean }) {
   const c = light ? "#FFFFFF" : "#1C1917";
   return (
-    <div className="relative z-30 flex h-[54px] shrink-0 items-end justify-between px-10 pb-1.5 max-[450px]:h-[env(safe-area-inset-top)] max-[450px]:pb-0">
-      <span className="text-[17px] font-semibold max-[450px]:hidden" style={{ color: c }}>
+    <div className="relative z-30 flex h-[54px] shrink-0 items-center justify-between px-[27px] max-[450px]:h-[env(safe-area-inset-top)] max-[450px]:px-0">
+      <span
+        className="w-[54px] text-center text-[17px] font-semibold leading-[22px] tracking-[0.1px] max-[450px]:hidden"
+        style={{ color: c }}
+      >
         9:41
       </span>
+
       <div className="absolute left-1/2 top-[11px] h-[37px] w-[125px] -translate-x-1/2 rounded-full bg-[#050505] max-[450px]:hidden" />
-      <svg className="max-[450px]:hidden" width="78" height="14" viewBox="0 0 78 14" fill="none">
-        <rect x="0" y="8" width="3" height="5" rx="1" fill={c} />
-        <rect x="5" y="6" width="3" height="7" rx="1" fill={c} />
-        <rect x="10" y="4" width="3" height="9" rx="1" fill={c} />
-        <rect x="15" y="2" width="3" height="11" rx="1" fill={c} />
-        <path d="M31 5.5C33.5 3 37.5 3 40 5.5" stroke={c} strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M33.2 8.2C34.7 6.8 36.3 6.8 37.8 8.2" stroke={c} strokeWidth="1.6" strokeLinecap="round" />
-        <circle cx="35.5" cy="11" r="1.4" fill={c} />
-        <rect x="52" y="2" width="22" height="11" rx="3.5" stroke={c} strokeWidth="1.2" />
-        <rect x="54" y="4" width="15" height="7" rx="1.8" fill={c} />
-        <path d="M76 5.5V9.5C77 9.2 77.6 8.2 77.6 7.5C77.6 6.8 77 5.8 76 5.5Z" fill={c} />
-      </svg>
+
+      <div className="flex items-center gap-[7px] max-[450px]:hidden">
+        {/* cellular: 4 bars, 3pt wide, 1pt radius, 2pt gaps */}
+        <svg width="19" height="12" viewBox="0 0 19 12" fill="none" aria-hidden>
+          <rect x="0" y="7.5" width="3" height="4.5" rx="1" fill={c} />
+          <rect x="5" y="5.5" width="3" height="6.5" rx="1" fill={c} />
+          <rect x="10" y="3" width="3" height="9" rx="1" fill={c} />
+          <rect x="15" y="0.5" width="3" height="11.5" rx="1" fill={c} />
+        </svg>
+
+        {/* wi-fi: three concentric arcs and the dot */}
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="none" aria-hidden>
+          <path
+            d="M8.5 3.4c2.06 0 3.94.79 5.35 2.08a.62.62 0 0 0 .87-.03l.79-.82a.63.63 0 0 0-.02-.9A10.4 10.4 0 0 0 8.5 1a10.4 10.4 0 0 0-6.99 2.73.63.63 0 0 0-.02.9l.79.82c.23.24.62.25.87.03A7.87 7.87 0 0 1 8.5 3.4Z"
+            fill={c}
+          />
+          <path
+            d="M8.5 7.05c1.06 0 2.03.38 2.78 1.01.26.22.64.2.88-.04l.78-.79a.63.63 0 0 0-.03-.91A6.85 6.85 0 0 0 8.5 4.7a6.85 6.85 0 0 0-4.41 1.62.63.63 0 0 0-.03.91l.78.79c.24.24.62.26.88.04A4.29 4.29 0 0 1 8.5 7.05Z"
+            fill={c}
+          />
+          <path
+            d="M10.2 9.63a.62.62 0 0 0 .04-.89A2.6 2.6 0 0 0 8.5 8.1c-.68 0-1.3.25-1.74.64a.62.62 0 0 0 .04.89l1.26 1.26c.24.25.64.25.88 0l1.26-1.26Z"
+            fill={c}
+          />
+        </svg>
+
+        {/* battery: 25x13 capsule at 35%, 21x9 fill, contact tip at 40% */}
+        <svg width="28" height="13" viewBox="0 0 28 13" fill="none" aria-hidden>
+          <rect
+            x="0.5"
+            y="0.5"
+            width="24"
+            height="12"
+            rx="4"
+            stroke={c}
+            strokeOpacity="0.35"
+            fill="none"
+          />
+          <rect x="2" y="2" width="21" height="9" rx="2.5" fill={c} />
+          <path
+            d="M26.2 4.4v4.2c.86-.36 1.3-1.02 1.3-2.1s-.44-1.74-1.3-2.1Z"
+            fill={c}
+            fillOpacity="0.4"
+          />
+        </svg>
+      </div>
     </div>
   );
 }
@@ -387,7 +429,7 @@ export function ScreenHeader({
   return (
     <div className="flex items-center gap-2 px-5 py-1.5">
       {onBack && (
-        <button onClick={onBack} className="-ml-1.5 flex items-center gap-0.5 py-1 pr-1 text-ink-900">
+        <button onClick={onBack} className="hit44 -ml-1.5 flex items-center gap-0.5 py-1 pr-1 text-ink-900">
           <ChevronLeft size={24} strokeWidth={2} />
           {backLabel && <span className="text-base font-semibold">{backLabel}</span>}
         </button>

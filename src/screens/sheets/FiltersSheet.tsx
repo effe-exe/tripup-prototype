@@ -13,7 +13,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
     <button
       aria-label="Open now"
       onClick={onToggle}
-      className={`flex h-7 w-12 shrink-0 items-center rounded-full px-1 transition-colors ${
+      className={`hit44 flex h-7 w-12 shrink-0 items-center rounded-full px-1 transition-colors ${
         on ? "justify-end bg-sunset-500" : "justify-start bg-line-300"
       }`}
     >

@@ -2,8 +2,9 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, BottomSheet, GhostButton } from "../../components/ui";
 import { rowEnter, tapCard } from "../../components/motion";
-import { RESTAURANTS, useStore } from "../../state/store";
-import { Crown, Check } from "lucide-react";
+import { useStore } from "../../state/store";
+import { PLACES } from "../../data/mock";
+import { Crown, Check, Clock } from "lucide-react";
 
 const TOTAL_VOTERS = 6;
 
@@ -33,10 +34,11 @@ export default function PollVoteSheet() {
           {/* Header */}
           <div className="flex items-center gap-2">
             <h2 className="min-w-0 flex-1 truncate text-[22px] font-bold leading-7 text-ink-900">
-              Dinner tonight
+              {state.poll.title}
             </h2>
             <span className="tabular shrink-0 rounded-full bg-sunset-50 px-2.5 py-1 text-xs font-bold text-sunset-700">
-              ⏱ 12:41
+              <Clock size={11} strokeWidth={2.5} className="mr-1 inline align-[-1px]" />
+              12:41
             </span>
           </div>
           <p className="mt-0.5 text-xs font-medium text-ink-500">by Ari</p>
@@ -44,7 +46,8 @@ export default function PollVoteSheet() {
           {/* Option rows */}
           <div className="mt-4 space-y-3">
             {options.map((o, i) => {
-              const rest = RESTAURANTS.find((r) => r.id === o.restaurantId)!;
+              const rest = PLACES[o.restaurantId];
+              if (!rest) return null;
               const leading = o.restaurantId === leaderId;
               const mine = o.votes.includes("ari");
               return (
@@ -156,7 +159,7 @@ export default function PollVoteSheet() {
               <button
                 disabled={poked}
                 onClick={poke}
-                className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-colors ${
+                className={`hit44 rounded-full px-4 py-2 text-[13px] font-semibold transition-colors ${
                   poked
                     ? "bg-paper-100 text-ink-400"
                     : "border border-line-300 bg-paper-0 text-ink-600 active:bg-paper-100"
