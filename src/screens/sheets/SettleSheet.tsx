@@ -106,7 +106,7 @@ export default function SettleSheet() {
                   initial={{ y: -30, x: 0, opacity: 0, rotate: 0 }}
                   animate={{ y: 560, x: c.drift, opacity: [0, 0.9, 0.4], rotate: c.rot }}
                   transition={{ duration: 2.8 + i * 0.2, delay: c.delay, ease: "easeIn" }}
-                  className="absolute top-0 rounded-[2px]"
+                  className="pointer-events-none absolute top-0 rounded-[2px]"
                   style={{ left: c.left, width: c.size, height: c.size, background: c.color }}
                 />
               ))}

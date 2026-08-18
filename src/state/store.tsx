@@ -43,12 +43,15 @@ export type Sheet =
   | "expenseDetail"
   | "allMemories"
   | "film"
-  | "aiPlan";
+  | "aiPlan"
+  | "mapPick";
 export type Screen = "home" | "trip" | "memories";
+
+export type BannerIcon = "join" | "poll" | "money" | "photo" | "session" | "done" | "info";
 
 export interface Banner {
   id: number;
-  emoji: string;
+  icon: BannerIcon;
   text: string;
 }
 
@@ -58,6 +61,17 @@ export interface SwipeState {
   passed: string[];
   /** group matches: restaurantId -> member ids who liked it (Maya/Zoe pre-seeded by script) */
   matches: Record<string, MemberId[]>;
+}
+
+/**
+ * A swipe session: the group is deciding one thing ("What do we do tonight?")
+ * from a shortlist Ari assembled from AI proposals or the map. No session means
+ * the deck is empty - nothing to swipe until somebody starts one.
+ */
+export interface Session {
+  title: string;
+  placeIds: string[];
+  createdBy: MemberId;
 }
 
 /** Live ambient presence shown in the swipe ticker bubble. */
@@ -86,6 +100,7 @@ interface State {
   banners: Banner[];
   swipe: SwipeState;
   swipeTicker: SwipeTicker;
+  session: Session | null;
   memories: Memory[];
   notes: TripNote[];
   settleStarted: boolean;
@@ -108,12 +123,8 @@ const initialState: State = {
   splitSegment: "expenses",
   buzz: initialBuzz,
   banners: [],
-  swipe: {
-    index: 0,
-    liked: [],
-    passed: [],
-    matches: { marealta: ["maya", "zoe"], terraco: ["maya"] },
-  },
+  swipe: { index: 0, liked: [], passed: [], matches: {} },
+  session: null,
   swipeTicker: { member: "maya", verb: "is swiping…", seq: 0 },
   memories: initialMemories,
   notes: initialNotes,
@@ -133,6 +144,8 @@ type Action =
   | { type: "REN_JOINS" }
   | { type: "SWIPE"; dir: "like" | "pass" }
   | { type: "SWIPE_UNDO" }
+  | { type: "START_SESSION"; title: string; placeIds: string[] }
+  | { type: "ADD_TO_SESSION"; placeId: string }
   | { type: "SET_TICKER"; member: MemberId; verb: string }
   | { type: "AMBIENT_LIKE"; member: MemberId; restaurantId: string; label: string }
   | { type: "SEND_POLL" }
@@ -142,7 +155,7 @@ type Action =
   | { type: "START_SETTLE" }
   | { type: "MARK_PAID"; from: MemberId }
   | { type: "SET_SPLIT_SEGMENT"; segment: "expenses" | "balances" }
-  | { type: "PUSH_BANNER"; emoji: string; text: string }
+  | { type: "PUSH_BANNER"; icon: BannerIcon; text: string }
   | { type: "POP_BANNER"; id: number }
   | { type: "PUSH_BUZZ"; icon: BuzzEvent["icon"]; text: string; time: string }
   | { type: "ADD_MEMORY"; photo: string }
@@ -169,6 +182,45 @@ function reducer(state: State, action: Action): State {
     case "REN_JOINS":
       if (state.renJoined) return state;
       return { ...state, renJoined: true, members: [...state.members, "ren"] };
+    case "START_SESSION": {
+      if (!action.placeIds.length) return state;
+      // A session is a group event: seed the poll from the same shortlist so a
+      // "make it a poll" hand-off carries the places the group actually swiped.
+      const options = action.placeIds.slice(0, 3).map((id) => ({ restaurantId: id, votes: [] }));
+      return {
+        ...state,
+        session: { title: action.title, placeIds: action.placeIds, createdBy: "ari" },
+        tab: "swipe",
+        sheet: null,
+        sheetPayload: null,
+        swipe: { index: 0, liked: [], passed: [], matches: {} },
+        poll:
+          state.poll.status === "draft"
+            ? { ...state.poll, title: action.title, options }
+            : state.poll,
+        banners: [
+          ...state.banners.slice(-1),
+          { id: bannerId++, icon: "session" as const, text: action.title + " - swipe session open" },
+        ],
+        buzz: [
+          {
+            id: "b" + buzzId++,
+            icon: "poll" as const,
+            text: "Ari started a swipe session: " + action.title,
+            time: "19:55",
+          },
+          ...state.buzz,
+        ],
+        buzzUnread: state.buzzUnread + 1,
+      };
+    }
+    case "ADD_TO_SESSION": {
+      if (!state.session || state.session.placeIds.includes(action.placeId)) return state;
+      return {
+        ...state,
+        session: { ...state.session, placeIds: [...state.session.placeIds, action.placeId] },
+      };
+    }
     case "SET_TICKER":
       return {
         ...state,
@@ -283,7 +335,7 @@ function reducer(state: State, action: Action): State {
     case "PUSH_BANNER":
       return {
         ...state,
-        banners: [...state.banners.slice(-1), { id: bannerId++, emoji: action.emoji, text: action.text }],
+        banners: [...state.banners.slice(-1), { id: bannerId++, icon: action.icon, text: action.text }],
       };
     case "POP_BANNER":
       return { ...state, banners: state.banners.filter((b) => b.id !== action.id) };
@@ -351,7 +403,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       once("ren", () =>
         after(3000, () => {
           dispatch({ type: "REN_JOINS" });
-          dispatch({ type: "PUSH_BANNER", emoji: "👋", text: "Ren joined the trip — dinner-only" });
+          dispatch({ type: "PUSH_BANNER", icon: "join", text: "Ren joined the trip - dinner only" });
           dispatch({ type: "PUSH_BUZZ", icon: "join", text: "Ren joined the trip", time: "19:52" });
         }),
       );
@@ -380,7 +432,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       once("close", () =>
         after(1500, () => {
           dispatch({ type: "CLOSE_POLL" });
-          dispatch({ type: "PUSH_BANNER", emoji: "🗳", text: "Maré Alta won — added to tonight, 20:45" });
+          dispatch({ type: "PUSH_BANNER", icon: "poll", text: "Maré Alta won - added to tonight, 20:45" });
           dispatch({ type: "PUSH_BUZZ", icon: "poll", text: "Poll closed: Maré Alta won 4–1–1", time: "20:15" });
         }),
       );
@@ -405,7 +457,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         });
         after(12000, () => {
           dispatch({ type: "MARK_PAID", from: "maya" });
-          dispatch({ type: "PUSH_BANNER", emoji: "🏁", text: "Everyone's square — that's a wrap!" });
+          dispatch({ type: "PUSH_BANNER", icon: "done", text: "Everyone is square - that is a wrap" });
           dispatch({ type: "PUSH_BUZZ", icon: "money", text: "Maya paid Nic €141.00 — all settled", time: "23:52" });
         });
       });
@@ -417,7 +469,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (state.screen === "trip") {
       once("ambient", () => {
         after(12000, () => {
-          dispatch({ type: "PUSH_BANNER", emoji: "📸", text: "Maya added 2 photos from Miradouro" });
+          dispatch({ type: "PUSH_BANNER", icon: "photo", text: "Maya added 2 photos from Miradouro" });
           dispatch({ type: "PUSH_BUZZ", icon: "itinerary", text: "Maya added 2 photos from Miradouro da Graça", time: "19:58" });
         });
         after(26000, () => {

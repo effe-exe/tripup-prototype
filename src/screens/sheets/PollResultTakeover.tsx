@@ -70,7 +70,7 @@ export default function PollResultTakeover() {
           {CONFETTI.map((c, i) => (
             <motion.span
               key={i}
-              className="absolute rounded-[2px]"
+              className="pointer-events-none absolute rounded-[2px]"
               style={{ left: c.left, top: 64, width: c.size, height: c.size, background: c.color }}
               initial={{ y: 0, x: 0, rotate: 0, opacity: 1 }}
               animate={{ y: 420, x: c.drift, rotate: c.rot, opacity: [1, 1, 0] }}
@@ -84,7 +84,7 @@ export default function PollResultTakeover() {
           ))}
 
           {/* Winner card */}
-          <div className="relative flex flex-1 flex-col items-center justify-center px-8">
+          <div className="pointer-events-none relative flex flex-1 flex-col items-center justify-center px-8">
             <motion.div
               initial={{ scale: 0.8, y: 24, opacity: 0 }}
               animate={
@@ -140,6 +140,26 @@ export default function PollResultTakeover() {
                 </div>
               </div>
             </motion.div>
+
+            {/* Once the card has landed, the space confirms the decision */}
+            {flown && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.22 }}
+                className="absolute inset-x-8 flex flex-col items-center gap-2.5 text-center"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 text-[26px] text-white">
+                  ✓
+                </div>
+                <p className="text-[24px] font-extrabold leading-7 tracking-[-0.3px] text-white">
+                  {winner.name} it is
+                </p>
+                <p className="text-sm font-medium text-white/85">
+                  Tonight · 20:45 · everyone’s notified
+                </p>
+              </motion.div>
+            )}
           </div>
 
           {/* Footer panel — where the card lands */}

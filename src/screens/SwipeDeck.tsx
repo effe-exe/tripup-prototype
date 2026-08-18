@@ -322,13 +322,13 @@ function TopCard({
       </motion.div>
       <motion.span
         style={{ opacity: likeOpacity }}
-        className="absolute left-5 top-16 -rotate-12 rounded-xl border-[3px] border-lagoon-500 bg-white/85 px-3 py-1 text-xl font-extrabold tracking-wide text-lagoon-500"
+        className="pointer-events-none absolute left-5 top-16 -rotate-12 rounded-xl border-[3px] border-lagoon-500 bg-white/85 px-3 py-1 text-xl font-extrabold tracking-wide text-lagoon-500"
       >
         INTO IT
       </motion.span>
       <motion.span
         style={{ opacity: passOpacity }}
-        className="absolute right-5 top-16 rotate-12 rounded-xl border-[3px] border-ink-500 bg-white/85 px-3 py-1 text-xl font-extrabold tracking-wide text-ink-500"
+        className="pointer-events-none absolute right-5 top-16 rotate-12 rounded-xl border-[3px] border-ink-500 bg-white/85 px-3 py-1 text-xl font-extrabold tracking-wide text-ink-500"
       >
         PASS
       </motion.span>

@@ -86,6 +86,85 @@ export const RESTAURANTS: Restaurant[] = [
   },
 ];
 
+/** Activity/daytime places — AI proposals can seed a swipe session with these. */
+export const ACTIVITIES: Restaurant[] = [
+  {
+    id: "lxfactory",
+    name: "LX Factory market",
+    vibe: "Vintage stalls, murals & coffee",
+    rating: 4.6,
+    reviews: 3100,
+    price: "€",
+    distanceM: 2100,
+    photo: market,
+    review: "Half a day disappears here. Go for the bookshop.",
+    openInfo: "Open 10:00–19:00",
+  },
+  {
+    id: "belem",
+    name: "Pastéis de Belém run",
+    vibe: "Warm custard tarts at opening time",
+    rating: 4.8,
+    reviews: 12000,
+    price: "€",
+    distanceM: 4000,
+    photo: timeout,
+    review: "Be there before 09:00 and there is no queue at all.",
+    openInfo: "Opens 08:00",
+  },
+  {
+    id: "kayak",
+    name: "Tejo sunrise kayak",
+    vibe: "Two hours on the water, guide included",
+    rating: 4.7,
+    reviews: 890,
+    price: "€€",
+    distanceM: 1500,
+    photo: miradouro,
+    review: "Sunrise over the bridge. Bring a dry bag.",
+    openInfo: "Slots 06:30 & 08:00",
+  },
+  {
+    id: "azulejo",
+    name: "Alfama azulejo workshop",
+    vibe: "Paint your own tile · rain-proof",
+    rating: 4.9,
+    reviews: 240,
+    price: "€€",
+    distanceM: 600,
+    photo: alfama,
+    review: "Tiny studio, very patient teacher, we all took one home.",
+    openInfo: "Sessions 11:00 & 15:00",
+  },
+  {
+    id: "tram28",
+    name: "Tram 28 loop",
+    vibe: "The classic rattle through Graça",
+    rating: 4.3,
+    reviews: 8600,
+    price: "€",
+    distanceM: 300,
+    photo: tram,
+    review: "Ride it early or you will be standing the whole way.",
+    openInfo: "Runs till 23:00",
+  },
+];
+
+/** Every swipeable place, by id. */
+export const PLACES: Record<string, Restaurant> = Object.fromEntries(
+  [...RESTAURANTS, ...ACTIVITIES].map((p) => [p.id, p]),
+);
+
+/**
+ * What the (faked) AI proposes, by intent. "tonight" deliberately proposes the
+ * three dinner spots so a session seeded from it feeds the dinner poll.
+ */
+export const AI_PROPOSALS: Record<"tonight" | "tomorrow" | "rainy", string[]> = {
+  tonight: ["vintem", "marealta", "terraco"],
+  tomorrow: ["lxfactory", "belem", "kayak", "tram28"],
+  rainy: ["azulejo", "lxfactory", "belem"],
+};
+
 export const initialPoll: Poll = {
   id: "dinner-poll",
   title: "Dinner tonight",
