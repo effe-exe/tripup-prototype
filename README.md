@@ -72,12 +72,21 @@ or get stuck.
   is honoured. (Accessibility requirement, not a style choice.)
 - **No emoji anywhere.** They render differently per device — every icon is a vector.
 
-## How this was built
+## Credits
 
-Designed in Figma, then built as real code with **Claude Code** (Anthropic's agentic
-CLI) driving the implementation — the brief's "AI-assisted code generation tool".
-The design system, the scenario data and the interaction decisions are authored;
-the AI wrote the code against them.
+**Design, art direction and UX — Federico Vietti.**
+The product direction, the visual language ("gen-Z Airbnb"), the design system
+(colour, type, spacing, elevation, components and their states), the wireflow, the
+high-fidelity screens, the interaction and motion decisions, and the scenario content
+were all designed in Figma before any code existed.
+
+**Frontend development — Claude Code** (Anthropic's agentic CLI), the brief's
+"AI-assisted code generation tool". It implemented the React application against
+those designs: components built to the Figma design system, the state machine and
+scripted demo timeline, and the balance/debt-minimisation maths.
+
+Design first, then code. The Figma file is the source of truth for every token and
+component in `src/components/ui.tsx`; the code mirrors it name for name.
 
 ## Stack
 
