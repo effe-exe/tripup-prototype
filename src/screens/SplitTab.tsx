@@ -10,6 +10,7 @@ import {
   Utensils,
   UtensilsCrossed,
   type LucideIcon,
+  Calculator,
 } from "lucide-react";
 import { useStore } from "../state/store";
 import { MEMBERS } from "../data/mock";
@@ -129,7 +130,7 @@ export default function SplitTab() {
             {/* My status hero */}
             <div className="rounded-3xl bg-sunset-50 px-5 py-6 text-center">
               <p className="text-[15px] font-semibold text-sunset-700">
-                {ariSquare ? "You're all square ✨" : ariBal < 0 ? "You owe" : "You're owed"}
+                {ariSquare ? "You're all square" : ariBal < 0 ? "You owe" : "You're owed"}
               </p>
               <AnimatedNumber
                 value={Math.abs(ariBal)}
@@ -178,7 +179,7 @@ export default function SplitTab() {
                         </div>
                         {zero ? (
                           <span className="tabular shrink-0 text-sm font-semibold text-ink-400">
-                            €0 ✓
+                            €0
                           </span>
                         ) : (
                           <AnimatedNumber
@@ -251,7 +252,7 @@ export default function SplitTab() {
                                           : "text-lagoon-700"
                                     }`}
                                   >
-                                    {zero ? "€0.00 ✓" : `${v < 0 ? "−" : "+"}${fmtEUR(Math.abs(v))}`}
+                                    {zero ? "€0.00" : `${v < 0 ? "−" : "+"}${fmtEUR(Math.abs(v))}`}
                                   </span>
                                 </div>
                               </div>
@@ -270,7 +271,7 @@ export default function SplitTab() {
               {hasTransfers ? (
                 <>
                   <p className="text-[15px] font-bold text-ink-900">
-                    🧮 Smart settle: <span className="tabular">{iousBefore}</span> IOUs →{" "}
+                    <Calculator size={14} strokeWidth={2} className="mr-1 inline align-[-2px]" />Smart settle: <span className="tabular">{iousBefore}</span> IOUs →{" "}
                     <span className="tabular">{state.transfers.length}</span> payments
                   </p>
                   <div className="mt-3 flex flex-col gap-3">

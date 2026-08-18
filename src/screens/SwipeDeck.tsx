@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, AnimatePresence, motion, useMotionValue, useTransform } from "framer-motion";
-import { Clock, Heart, Info, MapPin, SlidersHorizontal, Undo2, X } from "lucide-react";
+import { Clock, Heart, Info, MapPin, SlidersHorizontal, Sparkles, Star, Undo2, X } from "lucide-react";
 import { Avatar, AvatarStack, Chip, GhostButton, PrimaryButton, StatusBar } from "../components/ui";
 import { RESTAURANTS, useStore } from "../state/store";
 import { MEMBERS } from "../data/mock";
@@ -90,8 +90,8 @@ function TickerDots() {
 function SwipeTickerBubble() {
   const { state } = useStore();
   const t = state.swipeTicker;
-  const isLike = t.verb.includes("♥");
-  const text = `${MEMBERS[t.member].name} ${t.verb.replace(/\s*♥\s*$/, "").replace(/…\s*$/, "")}`;
+  const isLike = t.verb.startsWith("liked");
+  const text = `${MEMBERS[t.member].name} ${t.verb.replace(/…\s*$/, "")}`;
   return (
     <div className="absolute right-2 top-[52px] z-20 overflow-hidden rounded-full bg-paper-0 shadow-elev-2">
       <AnimatePresence mode="popLayout" initial={false}>
@@ -112,7 +112,7 @@ function SwipeTickerBubble() {
               transition={{ type: "spring", stiffness: 320, damping: 22 }}
               className="text-[13px] leading-none text-sunset-500"
             >
-              ♥
+              <Heart size={11} strokeWidth={0} className="fill-sunset-500" />
             </motion.span>
           ) : (
             <TickerDots />
@@ -128,7 +128,7 @@ function StarRow({ n }: { n: number }) {
     <span className="text-[12px] leading-none tracking-[1.5px]">
       {[0, 1, 2, 3, 4].map((i) => (
         <span key={i} className={i < n ? "text-golden-400" : "text-line-300"}>
-          ★
+          <Star size={11} strokeWidth={0} className="fill-golden-400" />
         </span>
       ))}
     </span>
@@ -155,13 +155,13 @@ function CardFace({ rest }: { rest: Restaurant }) {
         }}
       />
       <span className="absolute left-4 top-4 rounded-full bg-paper-0 px-3 py-1.5 text-xs font-semibold text-ink-900 shadow-elev-1">
-        ✨ Picked for your group
+        <Sparkles size={12} strokeWidth={2} className="mr-1 inline align-[-2px] text-sunset-500" />Picked for your group
       </span>
       <div className="absolute inset-x-0 bottom-0 p-5">
         <h2 className="text-[26px] font-bold leading-8 text-white">{rest.name}</h2>
         <p className="mt-0.5 text-sm font-medium leading-5 text-white/90">{rest.vibe}</p>
         <p className="mt-1.5 text-sm font-semibold text-white">
-          <span className="text-golden-400">★</span> {rest.rating} ({fmtReviews(rest.reviews)}) ·{" "}
+          <Star size={13} strokeWidth={0} className="mr-0.5 inline align-[-2px] fill-golden-400" />{rest.rating} ({fmtReviews(rest.reviews)}) ·{" "}
           {rest.price} · <span className="tabular">{rest.distanceM} m</span>
         </p>
         <p className="mt-3 rounded-2xl bg-white/[0.14] px-3.5 py-2.5 text-[13px] font-medium leading-[18px] text-white/95">
@@ -234,7 +234,7 @@ function TopCard({
   onSettled,
 }: {
   rest: Restaurant;
-  /** programmatic swipe requested by the ✕ / ♥ buttons */
+  /** programmatic swipe requested by the pass / like buttons */
   pending: "like" | "pass" | null;
   /** detail side showing — dragging disabled */
   flipped: boolean;
@@ -451,7 +451,7 @@ export default function SwipeDeck() {
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-paper-100 text-4xl">
-              ✨
+              <Sparkles size={26} strokeWidth={1.75} className="text-sunset-500" />
             </div>
             <p className="mt-4 text-lg font-bold text-ink-900">That's the neighborhood!</p>
             <p className="mt-1 text-sm font-medium text-ink-600">
@@ -526,14 +526,14 @@ export default function SwipeDeck() {
             {trayEntries.map((e, i) => (
               <span key={e.id}>
                 {i > 0 && " · "}
-                {e.name} <span className="text-sunset-500">♥</span>{" "}
+                {e.name} <Heart size={11} strokeWidth={0} className="inline align-[-1px] fill-sunset-500" />{" "}
                 <span className="tabular">{e.count}</span>
               </span>
             ))}
           </p>
           {pollLive ? (
             <span className="shrink-0 text-[13px] font-semibold text-ink-500">
-              In tonight's poll 🗳
+              In tonight's poll
             </span>
           ) : (
             <button
@@ -570,7 +570,7 @@ export default function SwipeDeck() {
                 transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.26 }}
                 className="text-[32px] font-extrabold leading-9 tracking-[-0.5px] text-ink-900"
               >
-                It's a match! 🔥
+                It's a match!
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0.4, y: 8 }}

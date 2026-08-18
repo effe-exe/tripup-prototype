@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { Star, X } from "lucide-react";
 import { BottomSheet, Chip, PrimaryButton } from "../../components/ui";
 import { RESTAURANTS, useStore } from "../../state/store";
 
@@ -17,7 +17,7 @@ export default function CreatePollSheet() {
 
           {/* Title — input-styled, pre-filled */}
           <div className="mt-3 flex h-[52px] items-center rounded-xl border border-line-300 bg-paper-0 px-4 text-base font-semibold text-ink-900">
-            Dinner tonight 🍽
+            Dinner tonight
           </div>
 
           {/* Options pre-filled from Swipe */}
@@ -36,7 +36,7 @@ export default function CreatePollSheet() {
                   <p className="truncate text-base font-semibold leading-5 text-ink-900">{r.name}</p>
                   <p className="truncate text-[13px] leading-4 text-ink-600">{r.vibe}</p>
                   <p className="mt-0.5 text-xs font-medium text-ink-500">
-                    <span className="text-golden-400">★</span> {r.rating} · {r.price} ·{" "}
+                    <Star size={12} strokeWidth={0} className="mr-0.5 inline align-[-2px] fill-golden-400" />{r.rating} · {r.price} ·{" "}
                     <span className="tabular">{r.distanceM} m</span>
                   </p>
                 </div>
@@ -58,14 +58,14 @@ export default function CreatePollSheet() {
           <div className="mt-2 flex flex-wrap gap-2">
             <Chip selected>⏱ Ends in 30 min</Chip>
             <Chip selected>Votes visible live</Chip>
-            <Chip selected>🎯 Winner → itinerary 20:45</Chip>
+            <Chip selected>Winner → itinerary 20:45</Chip>
           </div>
         </div>
 
         {/* Sticky footer CTA */}
         <div className="sticky bottom-0 mt-6 border-t border-line-200 bg-paper-0 px-5 pb-8 pt-3">
           <PrimaryButton full onClick={() => dispatch({ type: "SEND_POLL" })}>
-            Send to the group 🗳
+            Send to the group
           </PrimaryButton>
         </div>
       </div>

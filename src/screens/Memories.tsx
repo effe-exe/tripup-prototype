@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Play, Plus, Share } from "lucide-react";
+import {
+  ChevronLeft,
+  Play,
+  Plus,
+  Share,
+  Check,
+  Zap,
+  CreditCard,
+  Sparkles,
+  Camera,
+} from "lucide-react";
 import { useStore } from "../state/store";
 import { MEMBERS, photos } from "../data/mock";
 import type { MemberId } from "../data/types";
@@ -11,10 +21,10 @@ const WRAP_AVATARS: MemberId[] = ["ari", "nic", "maya", "tomas", "zoe", "ren"];
 
 /** Trip superlatives — identity tokens, no streaks (UX retention spec §5). */
 const SUPERLATIVES = [
-  { emoji: "⚡", label: "First to vote", who: "Zoe" },
-  { emoji: "💳", label: "Wallet hero", who: "Nic" },
-  { emoji: "🔮", label: "Vibe curator", who: "Maya" },
-  { emoji: "📸", label: "Paparazzo", who: "Tomás" },
+  { Icon: Zap, label: "First to vote", who: "Zoe" },
+  { Icon: CreditCard, label: "Wallet hero", who: "Nic" },
+  { Icon: Sparkles, label: "Vibe curator", who: "Maya" },
+  { Icon: Camera, label: "Paparazzo", who: "Tomás" },
 ];
 
 function SettledDisc({ id }: { id: MemberId }) {
@@ -26,7 +36,7 @@ function SettledDisc({ id }: { id: MemberId }) {
     >
       {m.initial}
       <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-lagoon-500 text-[8px] font-bold text-white shadow-elev-1">
-        ✓
+        <Check size={9} strokeWidth={3.5} />
       </span>
     </div>
   );
@@ -93,7 +103,7 @@ export default function Memories() {
               key={s.label}
               className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-line-200 bg-paper-0 px-3.5 text-[13px] font-semibold text-ink-600 shadow-elev-1"
             >
-              <span>{s.emoji}</span>
+              <s.Icon size={14} strokeWidth={2} className="text-sunset-600" />
               {s.label} — {s.who}
             </span>
           ))}
@@ -115,7 +125,7 @@ export default function Memories() {
               <p className="text-xs font-medium leading-4 text-ink-500">
                 {film === "idle" && "Auto-cut from everyone's photos & notes"}
                 {film === "cutting" && "Cutting your film… 23 clips"}
-                {film === "done" && "Premiere ready 🍿"}
+                {film === "done" && "Premiere ready"}
               </p>
             </div>
             {film === "idle" && (

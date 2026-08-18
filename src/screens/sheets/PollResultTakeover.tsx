@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Check } from "lucide-react";
 import { GhostButton, PrimaryButton, StatusBar } from "../../components/ui";
 import { RESTAURANTS, useStore } from "../../state/store";
 import type { Tab } from "../../state/store";
@@ -8,11 +9,6 @@ const SHORT_NAME: Record<string, string> = {
   vintem: "Vintém",
   marealta: "Maré Alta",
   terraco: "Terraço",
-};
-const WIN_EMOJI: Record<string, string> = {
-  vintem: "🎶",
-  marealta: "🐟",
-  terraco: "🌇",
 };
 
 /** 8 confetti pieces drifting down once — slow, no twinkle, no blink. */
@@ -109,7 +105,7 @@ export default function PollResultTakeover() {
                   transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.28 }}
                   className="text-[28px] font-extrabold leading-8 tracking-[-0.4px] text-ink-900"
                 >
-                  {winner.name} wins! {WIN_EMOJI[winnerId] ?? "🎉"}
+                  {winner.name} wins!
                 </motion.h2>
                 <motion.p
                   initial={{ opacity: 0.4, y: 8 }}
@@ -150,7 +146,7 @@ export default function PollResultTakeover() {
                 className="absolute inset-x-8 flex flex-col items-center gap-2.5 text-center"
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 text-[26px] text-white">
-                  ✓
+                  <Check size={26} strokeWidth={3} />
                 </div>
                 <p className="text-[24px] font-extrabold leading-7 tracking-[-0.3px] text-white">
                   {winner.name} it is

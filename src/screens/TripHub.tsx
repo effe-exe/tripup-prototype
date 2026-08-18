@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, MoreVertical, Plus, Receipt, Sparkles } from "lucide-react";
+import { Check, ChevronDown, MoreVertical, Plus, Receipt, Sparkles } from "lucide-react";
 import {
   Avatar,
   HomeIndicator,
@@ -299,7 +299,7 @@ function DoneRow({ it, onTap }: { it: ItineraryItem; onTap: () => void }) {
         <p className="truncate text-xs font-medium tabular text-ink-500">{it.subtitle}</p>
       </div>
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success-50 text-[13px] font-bold text-success-600">
-        ✓
+        <Check size={11} strokeWidth={3.5} />
       </span>
     </motion.button>
   );
@@ -365,10 +365,10 @@ function DinnerRow({
             </div>
             <div className="mt-2.5 flex gap-2 pl-14">
               <span className="rounded-full bg-sunset-50 px-2.5 py-1 text-xs font-semibold tabular text-sunset-700">
-                🗳 won 4–1–1
+                Won 4–1–1
               </span>
               <span className="rounded-full bg-paper-100 px-2.5 py-1 text-xs font-semibold text-ink-600">
-                🧭 Directions
+                Directions
               </span>
             </div>
           </motion.button>

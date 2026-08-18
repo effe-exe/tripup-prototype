@@ -9,7 +9,7 @@ const SLIDE_MS = 3000;
 
 const SLIDES = [
   { photo: photos.alfama, caption: "Day 1 — we landed hungry" },
-  { photo: photos.fado, caption: "The fado night 🎶" },
+  { photo: photos.fado, caption: "The fado night" },
   { photo: photos.miradouro, caption: "Golden hour, every hour" },
   { photo: photos.seafood, caption: "€1,141 later…" },
   { photo: photos.tram, caption: "0 debts. All love." },
@@ -38,7 +38,7 @@ export default function FilmSheet() {
 
   const close = () => dispatch({ type: "CLOSE_SHEET" });
   const share = () =>
-    dispatch({ type: "PUSH_BANNER", emoji: "💌", text: "Link copied — send it to the group 💌" });
+    dispatch({ type: "PUSH_BANNER", icon: "info", text: "Link copied - send it to the group" });
 
   return (
     <AnimatePresence>

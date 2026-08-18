@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, BottomSheet, GhostButton } from "../../components/ui";
 import { rowEnter, tapCard } from "../../components/motion";
 import { RESTAURANTS, useStore } from "../../state/store";
+import { Crown, Check } from "lucide-react";
 
 const TOTAL_VOTERS = 6;
 
@@ -14,7 +15,7 @@ export default function PollVoteSheet() {
   const poke = () => {
     if (poked) return;
     setPoked(true);
-    dispatch({ type: "PUSH_BANNER", emoji: "👉", text: "Gentle poke sent to 2 friends" });
+    dispatch({ type: "PUSH_BANNER", icon: "info", text: "Gentle poke sent to 2 friends" });
   };
 
   const max = Math.max(...options.map((o) => o.votes.length));
@@ -32,7 +33,7 @@ export default function PollVoteSheet() {
           {/* Header */}
           <div className="flex items-center gap-2">
             <h2 className="min-w-0 flex-1 truncate text-[22px] font-bold leading-7 text-ink-900">
-              Dinner tonight 🍽
+              Dinner tonight
             </h2>
             <span className="tabular shrink-0 rounded-full bg-sunset-50 px-2.5 py-1 text-xs font-bold text-sunset-700">
               ⏱ 12:41
@@ -67,7 +68,7 @@ export default function PollVoteSheet() {
                       transition={{ type: "spring", stiffness: 320, damping: 28 }}
                       className="absolute -top-3 right-4 z-10 text-xl"
                     >
-                      👑
+                      <Crown size={13} strokeWidth={2.5} className="text-golden-400" />
                     </motion.span>
                   )}
                   <div className="flex items-center gap-3">
@@ -123,7 +124,7 @@ export default function PollVoteSheet() {
                           : "border-[1.5px] border-line-300 bg-paper-0"
                       }`}
                     >
-                      {mine ? "✓" : ""}
+                      {mine ? <Check size={13} strokeWidth={3} /> : null}
                     </span>
                   </div>
                 </motion.button>
@@ -161,7 +162,7 @@ export default function PollVoteSheet() {
                     : "border border-line-300 bg-paper-0 text-ink-600 active:bg-paper-100"
                 }`}
               >
-                {poked ? "Poked ✓" : "👉 Poke the slowpokes"}
+                {poked ? "Poked" : "Poke the slowpokes"}
               </button>
             </div>
           )}

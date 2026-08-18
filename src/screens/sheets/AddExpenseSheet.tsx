@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { LayoutGroup, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { useStore } from "../../state/store";
 import { MEMBERS } from "../../data/mock";
 import type { MemberId } from "../../data/types";
@@ -195,7 +195,11 @@ export default function AddExpenseSheet() {
                 }`}
               >
                 Items {fmtEUR(itemsTotal).replace(".00", "")} / Total {fmtEUR(TOTAL).replace(".00", "")}{" "}
-                {balanced ? <span className="text-lagoon-700">✓</span> : "— check items"}
+                {balanced ? (
+                  <Check size={13} strokeWidth={3} className="inline text-lagoon-700" />
+                ) : (
+                  "— check items"
+                )}
               </p>
             </div>
           )}

@@ -1,10 +1,11 @@
-﻿import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useStore } from "../../state/store";
 import { MEMBERS } from "../../data/mock";
 import type { MemberId } from "../../data/types";
 import { fmtEUR, fmtEURWhole } from "../../data/balances";
 import { AnimatedNumber, Avatar, BottomSheet, StatusBadge } from "../../components/ui";
 import { rowEnter } from "../../components/motion";
+import { Check } from "lucide-react";
 
 const WRAP_AVATARS: MemberId[] = ["ari", "nic", "maya", "tomas", "zoe", "ren"];
 
@@ -28,7 +29,7 @@ function SettledDisc({ id }: { id: MemberId }) {
     >
       {m.initial}
       <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-lagoon-500 text-[8px] font-bold text-white shadow-elev-1">
-        ✓
+        <Check size={9} strokeWidth={3.5} />
       </span>
     </div>
   );
@@ -118,7 +119,7 @@ export default function SettleSheet() {
                   transition={{ type: "spring", stiffness: 240, damping: 30, delay: 0.1 }}
                   className="text-[30px] font-extrabold leading-9 tracking-[-0.5px] text-white"
                 >
-                  That's a wrap, Lisboa 🏁
+                  That's a wrap, Lisboa
                 </motion.h2>
                 <motion.p
                   initial={{ opacity: 0.4, y: 12 }}

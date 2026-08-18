@@ -7,13 +7,31 @@ import {
   useMotionValue,
   useReducedMotion,
 } from "framer-motion";
-import { Home, Layers, Plus, Coins, Bell, ChevronLeft } from "lucide-react";
+import {
+  Home,
+  Layers,
+  Plus,
+  Coins,
+  Bell,
+  ChevronLeft,
+  Check,
+  UserPlus,
+  Vote,
+  Image as ImageIcon,
+  Flame,
+  PartyPopper,
+  Info,
+} from "lucide-react";
+import BoringAvatar from "boring-avatars";
 import { MEMBERS } from "../data/mock";
 import type { MemberId } from "../data/types";
-import { useStore, type Tab } from "../state/store";
+import { useStore, type Tab, type BannerIcon } from "../state/store";
 import { EASE_STD, springFirm, springSnap, tapChip } from "./motion";
 
 /* ---------- Avatar (mirrors Figma Avatar/40 variant set) ---------- */
+
+/** Brand-tinted generated faces (boring-avatars "beam"), seeded per member. */
+const AVATAR_COLORS = ["#FF5A45", "#FFB43A", "#0E9384", "#FFE1DB", "#1C1917"];
 
 export function Avatar({
   id,
@@ -31,15 +49,16 @@ export function Avatar({
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <div
-        className="flex h-full w-full items-center justify-center rounded-full font-semibold"
+        className="overflow-hidden rounded-full"
         style={{
-          background: excluded ? "#F4F2EE" : m.bg,
-          color: excluded ? "#A39D93" : m.fg,
-          fontSize: size * 0.4,
+          width: size,
+          height: size,
           boxShadow: ring ? "0 0 0 2px #FFFFFF" : undefined,
+          filter: excluded ? "grayscale(1)" : undefined,
+          opacity: excluded ? 0.45 : 1,
         }}
       >
-        {m.initial}
+        <BoringAvatar size={size} name={m.name} variant="beam" colors={AVATAR_COLORS} />
       </div>
       {state === "online" && (
         <span
@@ -55,17 +74,16 @@ export function Avatar({
       )}
       {state === "settled" && (
         <span
-          className="absolute flex items-center justify-center rounded-full bg-lagoon-500 font-bold text-white"
+          className="absolute flex items-center justify-center rounded-full bg-lagoon-500 text-white"
           style={{
             width: size * 0.42,
             height: size * 0.42,
             right: -2,
             bottom: -2,
-            fontSize: size * 0.26,
             boxShadow: "0 0 0 1.5px #FFFFFF",
           }}
         >
-          ✓
+          <Check size={Math.max(8, size * 0.26)} strokeWidth={3.5} />
         </span>
       )}
       {excluded && (
@@ -266,7 +284,13 @@ export function StatusBadge({ status }: { status: "paid" | "pending" }) {
               : "bg-paper-100 text-ink-500"
           }`}
         >
-          {status === "paid" ? "paid ✓" : "pending"}
+          {status === "paid" ? (
+            <span className="inline-flex items-center gap-1">
+              <Check size={12} strokeWidth={3} /> paid
+            </span>
+          ) : (
+            "pending"
+          )}
         </motion.span>
       </AnimatePresence>
     </span>
@@ -551,6 +575,16 @@ export function BottomSheet({
 
 /* ---------- In-app banner ---------- */
 
+const BANNER_ICON: Record<BannerIcon, React.ReactNode> = {
+  join: <UserPlus size={15} strokeWidth={2} />,
+  poll: <Vote size={15} strokeWidth={2} />,
+  money: <Coins size={15} strokeWidth={2} />,
+  photo: <ImageIcon size={15} strokeWidth={2} />,
+  session: <Flame size={15} strokeWidth={2} />,
+  done: <PartyPopper size={15} strokeWidth={2} />,
+  info: <Info size={15} strokeWidth={2} />,
+};
+
 export function BannerHost() {
   const { state, dispatch } = useStore();
   return (
@@ -566,7 +600,9 @@ export function BannerHost() {
             onClick={() => dispatch({ type: "POP_BANNER", id: b.id })}
             className="pointer-events-auto relative flex items-center gap-2.5 overflow-hidden rounded-2xl bg-paper-0 px-4 py-3 text-left shadow-elev-3"
           >
-            <span className="text-lg">{b.emoji}</span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sunset-50 text-sunset-700">
+              {BANNER_ICON[b.icon]}
+            </span>
             <span className="text-sm font-semibold text-ink-900">{b.text}</span>
             {/* auto-dismiss runway — drains once over the banner's 4s life */}
             <motion.span

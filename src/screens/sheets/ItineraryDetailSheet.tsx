@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronRight, MapPin, Receipt } from "lucide-react";
+import { ChevronRight, MapPin, Receipt, StickyNote } from "lucide-react";
 import { AvatarStack, BottomSheet, GhostButton } from "../../components/ui";
 import { useStore } from "../../state/store";
 
@@ -98,7 +98,8 @@ export default function ItineraryDetailSheet() {
 
           {/* Notes */}
           <p className="text-[13px] font-medium leading-5 text-ink-500">
-            📝 {NOTES[item.id] ?? "No notes yet — add one from the plan."}
+            <StickyNote size={13} strokeWidth={2} className="mr-1 inline align-[-2px]" />
+            {NOTES[item.id] ?? "No notes yet — add one from the plan."}
           </p>
 
           <div className="flex justify-center">

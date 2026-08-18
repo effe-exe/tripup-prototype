@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, Plus, Palmtree, Snowflake } from "lucide-react";
 import { Avatar, AvatarStack, HomeIndicator, StatusBar } from "../components/ui";
 import { rowEnter, tapCard } from "../components/motion";
 import { TRIP } from "../data/mock";
@@ -8,8 +8,8 @@ import { useStore } from "../state/store";
 const spring = { type: "spring", stiffness: 260, damping: 30 } as const;
 
 const UP_NEXT = [
-  { id: "ibiza", emoji: "🌴", name: "Ibiza Sept", meta: "Sep 12–15 · 4 friends" },
-  { id: "ski", emoji: "🎿", name: "Ski? 🎿", meta: "Draft · pick dates" },
+  { id: "ibiza", Icon: Palmtree, name: "Ibiza Sept", meta: "Sep 12–15 · 4 friends" },
+  { id: "ski", Icon: Snowflake, name: "Ski trip?", meta: "Draft · pick dates" },
 ];
 
 export default function Home() {
@@ -21,7 +21,7 @@ export default function Home() {
       ? `Poll ending soon — ${voteCount}/6 voted`
       : dinner?.state === "planned"
         ? "Tonight: Maré Alta 20:45"
-        : "Tonight: dinner undecided 🍽";
+        : "Tonight: dinner undecided";
 
   return (
     <div className="relative flex h-full flex-col bg-paper-50">
@@ -29,7 +29,7 @@ export default function Home() {
 
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between px-5 pb-2 pt-1">
-        <h1 className="text-[26px] font-extrabold tracking-[-0.4px] text-ink-900">Hey Ari 👋</h1>
+        <h1 className="text-[26px] font-extrabold tracking-[-0.4px] text-ink-900">Hey Ari</h1>
         <motion.button
           whileTap={{ scale: 0.94 }}
           onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "profile" })}
@@ -95,13 +95,13 @@ export default function Home() {
                 whileTap={tapCard}
                 onClick={() =>
                   t.id === "ibiza"
-                    ? dispatch({ type: "PUSH_BANNER", emoji: "☀️", text: "Ibiza Sept starts in 25 days" })
+                    ? dispatch({ type: "PUSH_BANNER", icon: "info", text: "Ibiza Sept starts in 25 days" })
                     : dispatch({ type: "OPEN_SHEET", sheet: "newTrip" })
                 }
                 className="w-[172px] shrink-0 rounded-2xl bg-paper-0 p-3 text-left shadow-elev-1"
               >
                 <div className="flex h-24 items-center justify-center rounded-xl bg-paper-100 text-3xl">
-                  {t.emoji}
+                  <t.Icon size={20} strokeWidth={1.75} className="text-ink-500" />
                 </div>
                 <p className="mt-2.5 text-[15px] font-bold text-ink-900">{t.name}</p>
                 <p className="text-xs font-medium text-ink-500">{t.meta}</p>

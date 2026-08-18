@@ -61,7 +61,7 @@ export default function AddMemberSheet() {
               >
                 <Avatar id="ren" size={40} />
               </motion.div>
-              <p className="text-[15px] font-bold text-ink-900">Ren joined 🎉</p>
+              <p className="text-[15px] font-bold text-ink-900">Ren joined</p>
             </motion.div>
           )}
         </AnimatePresence>

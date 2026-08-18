@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Heart, RotateCcw, Sparkles } from "lucide-react";
+import { Croissant, Heart, Palette, RotateCcw, ShoppingBag, Sparkles, Star, Waves } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { BottomSheet, Chip, GhostButton, PrimaryButton } from "../../components/ui";
 import { useStore } from "../../state/store";
 
@@ -16,7 +17,7 @@ const EXAMPLES = [
 
 interface Suggestion {
   id: string;
-  emoji: string;
+  Icon: LucideIcon;
   name: string;
   rating: string;
   reviews: string;
@@ -29,7 +30,7 @@ interface Suggestion {
 const SUGGESTIONS: Suggestion[] = [
   {
     id: "lxfactory",
-    emoji: "🛍",
+    Icon: ShoppingBag,
     name: "LX Factory market stroll",
     rating: "4.6",
     reviews: "3.1k",
@@ -39,7 +40,7 @@ const SUGGESTIONS: Suggestion[] = [
   },
   {
     id: "belem",
-    emoji: "🥮",
+    Icon: Croissant,
     name: "Pastéis de Belém run",
     rating: "4.8",
     reviews: "12k",
@@ -49,7 +50,7 @@ const SUGGESTIONS: Suggestion[] = [
   },
   {
     id: "kayak",
-    emoji: "🛶",
+    Icon: Waves,
     name: "Tejo sunrise kayak",
     rating: "4.7",
     reviews: "890",
@@ -59,7 +60,7 @@ const SUGGESTIONS: Suggestion[] = [
   },
   {
     id: "azulejo",
-    emoji: "🎨",
+    Icon: Palette,
     name: "Alfama azulejo workshop",
     rating: "4.9",
     reviews: "240",
@@ -109,7 +110,7 @@ export default function AiPlanSheet() {
   const close = () => dispatch({ type: "CLOSE_SHEET" });
 
   const startMatch = () => {
-    dispatch({ type: "PUSH_BANNER", emoji: "🔥", text: "Sent to the group — swipe session open" });
+    dispatch({ type: "PUSH_BANNER", icon: "session", text: "Sent to the group - swipe session open" });
     dispatch({ type: "SET_TAB", tab: "swipe" } as const);
     close();
   };
@@ -155,7 +156,7 @@ export default function AiPlanSheet() {
 
               <div className="mt-5 rounded-2xl bg-sunset-50 px-4 py-3">
                 <p className="text-[13px] font-medium leading-5 text-sunset-700">
-                  TripUp AI knows your group: Maya loves rooftops, Nic skips wine, Zoe's a nightowl 🌙
+                  TripUp AI knows your group: Maya loves rooftops, Nic skips wine, Zoe's a nightowl
                 </p>
               </div>
             </div>
@@ -166,7 +167,7 @@ export default function AiPlanSheet() {
                 disabled={prompt.trim().length === 0}
                 onClick={() => setPhase("thinking")}
               >
-                Find ideas ✨
+                Find ideas
               </PrimaryButton>
             </div>
           </motion.div>
@@ -248,18 +249,18 @@ export default function AiPlanSheet() {
                       className="flex items-start gap-3 rounded-2xl border border-line-200 bg-paper-0 p-3.5 shadow-elev-1"
                     >
                       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sunset-50 text-[22px] leading-none">
-                        {s.emoji}
+                        <s.Icon size={18} strokeWidth={1.75} className="text-sunset-600" />
                       </span>
 
                       <div className="min-w-0 flex-1">
                         <p className="text-[15px] font-bold leading-5 text-ink-900">{s.name}</p>
                         <p className="mt-1 text-xs font-medium text-ink-500">
-                          <span className="text-golden-400">★</span>{" "}
+                          <Star size={12} strokeWidth={0} className="mr-0.5 inline align-[-2px] fill-golden-400" />{" "}
                           <span className="tabular">{s.rating}</span> ({s.reviews}) · {s.price} ·{" "}
                           <span className="tabular">{s.distance}</span>
                         </p>
                         <p className="mt-1.5 text-[12.5px] font-medium italic leading-4 text-sunset-700">
-                          ✨ {s.why}
+                          <Sparkles size={11} strokeWidth={2} className="mr-1 inline align-[-1px]" />{s.why}
                         </p>
                       </div>
 
@@ -296,7 +297,7 @@ export default function AiPlanSheet() {
             {/* Sticky hand-off — straight into the group's swipe session */}
             <div className="sticky bottom-0 mt-4 border-t border-line-200 bg-paper-0 px-5 pb-8 pt-3">
               <PrimaryButton full onClick={startMatch}>
-                Start a group match 🔥
+                Start a group match
               </PrimaryButton>
               <div className="mt-1 flex justify-center">
                 <GhostButton

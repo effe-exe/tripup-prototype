@@ -77,7 +77,7 @@ export interface Session {
 /** Live ambient presence shown in the swipe ticker bubble. */
 export interface SwipeTicker {
   member: MemberId;
-  /** e.g. "is swiping…" or "liked Terraço ♥" */
+  /** e.g. "is swiping…" or "liked Terraço" */
   verb: string;
   /** bump key so the component can re-animate on change */
   seq: number;
@@ -236,7 +236,7 @@ function reducer(state: State, action: Action): State {
         swipe: { ...state.swipe, matches },
         swipeTicker: {
           member: action.member,
-          verb: "liked " + action.label + " ♥",
+          verb: "liked " + action.label,
           seq: state.swipeTicker.seq + 1,
         },
       };
