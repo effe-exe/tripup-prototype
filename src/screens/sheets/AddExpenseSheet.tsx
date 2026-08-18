@@ -35,7 +35,7 @@ function AvatarToggle({
 }) {
   return (
     <motion.button
-      className="flex shrink-0 flex-col items-center gap-1"
+      className="flex min-w-[44px] shrink-0 flex-col items-center gap-1"
       onClick={onToggle}
       whileTap={{ scale: 0.9 }}
       animate={{ scale: on ? 1 : 0.92, opacity: on ? 1 : 0.6 }}

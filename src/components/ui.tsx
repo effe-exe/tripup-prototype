@@ -100,6 +100,37 @@ export function Avatar({
   );
 }
 
+/** Avatar with the member's name beneath it. Generated faces aren't
+ *  self-identifying, so anywhere the user must pick a person, label it. */
+export function AvatarLabeled({
+  id,
+  size = 40,
+  state = "default",
+  onClick,
+}: {
+  id: MemberId;
+  size?: number;
+  state?: "default" | "online" | "settled" | "excluded";
+  onClick?: () => void;
+}) {
+  const Tag = onClick ? motion.button : motion.div;
+  return (
+    <Tag
+      onClick={onClick}
+      whileTap={onClick ? { scale: 0.94 } : undefined}
+      className="flex shrink-0 flex-col items-center gap-1"
+    >
+      <Avatar id={id} size={size} state={state} />
+      <span
+        className="max-w-[52px] truncate text-[10px] font-semibold leading-3 text-ink-600"
+        title={MEMBERS[id].name}
+      >
+        {MEMBERS[id].name}
+      </span>
+    </Tag>
+  );
+}
+
 export function AvatarStack({ ids, size = 28 }: { ids: MemberId[]; size?: number }) {
   return (
     <div className="flex" style={{ paddingLeft: size * 0.25 }}>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, MoreVertical, Plus, Receipt, Sparkles } from "lucide-react";
 import {
-  Avatar,
+  AvatarLabeled,
   HomeIndicator,
   PrimaryButton,
   ScreenHeader,
@@ -100,11 +100,11 @@ export default function TripHub() {
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-32">
         {/* Group strip */}
-        <div className="flex items-center gap-3 py-3">
+        <div className="flex items-start gap-3 py-3">
           {state.members
             .filter((id) => id !== "ren")
             .map((id) => (
-              <Avatar
+              <AvatarLabeled
                 key={id}
                 id={id}
                 size={40}
@@ -120,7 +120,7 @@ export default function TripHub() {
                 transition={{ type: "spring", stiffness: 300, damping: 22 }}
                 className="relative"
               >
-                <Avatar id="ren" size={40} />
+                <AvatarLabeled id="ren" size={40} />
                 <span className="absolute -right-1.5 -top-1 rounded-full bg-sunset-500 px-1.5 py-0.5 text-[9px] font-bold leading-3 text-white">
                   NEW
                 </span>

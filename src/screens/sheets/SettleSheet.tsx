@@ -3,7 +3,7 @@ import { useStore } from "../../state/store";
 import { MEMBERS } from "../../data/mock";
 import type { MemberId } from "../../data/types";
 import { fmtEUR, fmtEURWhole } from "../../data/balances";
-import { AnimatedNumber, Avatar, BottomSheet, StatusBadge } from "../../components/ui";
+import { AnimatedNumber, Avatar, BottomSheet, StatusBadge, StatusBar } from "../../components/ui";
 import { rowEnter } from "../../components/motion";
 import { Check } from "lucide-react";
 
@@ -98,14 +98,16 @@ export default function SettleSheet() {
     {/* Wrap takeover — owns the whole screen, single pass once everyone is square */}
     <AnimatePresence>
       {open && state.allSquare && (
-        <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="absolute inset-0 z-[70] overflow-hidden"
+              className="absolute inset-0 z-[70] flex flex-col overflow-hidden"
               style={{ background: "linear-gradient(160deg, #FF5A45 0%, #FFB43A 100%)" }}
             >
+              <StatusBar light />
+
               {CONFETTI.map((c, i) => (
                 <motion.span
                   key={i}
@@ -117,7 +119,7 @@ export default function SettleSheet() {
                 />
               ))}
 
-              <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
                 <motion.h2
                   initial={{ opacity: 0.4, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -167,7 +169,6 @@ export default function SettleSheet() {
                 </motion.div>
               </div>
             </motion.div>
-        </>
       )}
     </AnimatePresence>
     </>

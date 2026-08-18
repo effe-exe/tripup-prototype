@@ -468,9 +468,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (state.poll.status === "open" && voteCount >= 6) {
       once("close", () =>
         after(2800, () => {
+          // Announce whatever actually won — the shortlist is the group's, not ours.
+          const ranked = [...state.poll.options].sort((a, b) => b.votes.length - a.votes.length);
+          const name = PLACES[ranked[0].restaurantId]?.name ?? "The winner";
+          const tally = ranked.map((o) => o.votes.length).join("–");
           dispatch({ type: "CLOSE_POLL" });
-          dispatch({ type: "PUSH_BANNER", icon: "poll", text: "Maré Alta won - added to tonight, 20:45" });
-          dispatch({ type: "PUSH_BUZZ", icon: "poll", text: "Poll closed: Maré Alta won 4–1–1", time: "20:15" });
+          dispatch({ type: "PUSH_BANNER", icon: "poll", text: `${name} won - added to tonight, 20:45` });
+          dispatch({ type: "PUSH_BUZZ", icon: "poll", text: `Poll closed: ${name} won ${tally}`, time: "20:15" });
         }),
       );
     }
