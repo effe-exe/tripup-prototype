@@ -258,26 +258,13 @@ export const initialExpenses: Expense[] = [
   },
 ];
 
-/** The demo dinner — added during the flow (screen 08). Wine excludes Ren & Nic. */
-export const dinnerExpense: Expense = {
-  id: "e-dinner",
-  title: "Dinner @ Maré Alta",
-  paidBy: "ari",
-  amount: 186,
-  date: "Aug 17",
-  sharedBy: ["ari", "nic", "maya", "tomas", "zoe", "ren"],
-  items: [
-    {
-      label: "Food & cover",
-      amount: 138,
-      sharedBy: ["ari", "nic", "maya", "tomas", "zoe", "ren"],
-    },
-    { label: "Wine", amount: 48, sharedBy: ["ari", "maya", "tomas", "zoe"] },
-  ],
-  linkedItineraryId: "it-dinner",
-};
+/**
+ * The demo dinner is built by AddExpenseSheet from the live roster + the
+ * presenter's toggles and committed via ADD_DINNER_EXPENSE — there is no
+ * hardcoded copy here, so the ledger can never disagree with the sheet.
+ */
 
-/** §7.4 consolidated transfers after the dinner lands. */
+/** §7.4 consolidated transfers after the dinner lands (reference figures). */
 export const consolidatedTransfers: Transfer[] = [
   { from: "maya", to: "nic", amount: 141, status: "pending" },
   { from: "zoe", to: "nic", amount: 126, status: "pending" },

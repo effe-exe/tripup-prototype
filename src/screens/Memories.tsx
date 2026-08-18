@@ -17,8 +17,6 @@ import type { MemberId } from "../data/types";
 import { fmtEURWhole } from "../data/balances";
 import { Avatar, HomeIndicator, StatusBar } from "../components/ui";
 
-const WRAP_AVATARS: MemberId[] = ["ari", "nic", "maya", "tomas", "zoe", "ren"];
-
 /** Trip superlatives — identity tokens, no streaks (UX retention spec §5). */
 const SUPERLATIVES = [
   { Icon: Zap, label: "First to vote", who: "Zoe" },
@@ -90,10 +88,10 @@ export default function Memories() {
             That's a wrap, Lisboa
           </h1>
           <p className="tabular mt-1 text-[13px] font-semibold text-white/95">
-            {fmtEURWhole(tripTotal)} · 4 days · 6 friends · 0 debts
+            {fmtEURWhole(tripTotal)} · 4 days · {state.members.length} friends · 0 debts
           </p>
           <div className="mt-3.5 flex gap-1.5">
-            {WRAP_AVATARS.map((id) => (
+            {state.members.map((id) => (
               <SettledDisc key={id} id={id} />
             ))}
           </div>

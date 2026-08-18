@@ -15,8 +15,15 @@ export function expenseShares(e: Expense): Record<MemberId, number> {
   return shares;
 }
 
-/** Net balance per member: paid − owed. Positive = is owed money. */
-export function computeBalances(expenses: Expense[]): Record<MemberId, number> {
+/**
+ * Net balance per member: paid − owed, minus money that has already moved.
+ * Positive = is owed money. `settled` are transfers marked paid: the payer's
+ * debt shrinks, the payee's credit shrinks by the same amount.
+ */
+export function computeBalances(
+  expenses: Expense[],
+  settled: Transfer[] = [],
+): Record<MemberId, number> {
   const net = {} as Record<MemberId, number>;
   for (const e of expenses) {
     net[e.paidBy] = (net[e.paidBy] ?? 0) + e.amount;
@@ -24,6 +31,10 @@ export function computeBalances(expenses: Expense[]): Record<MemberId, number> {
     for (const [m, s] of Object.entries(shares)) {
       net[m as MemberId] = (net[m as MemberId] ?? 0) - s;
     }
+  }
+  for (const t of settled) {
+    net[t.from] = (net[t.from] ?? 0) + t.amount;
+    net[t.to] = (net[t.to] ?? 0) - t.amount;
   }
   // clamp float noise
   for (const k of Object.keys(net)) net[k as MemberId] = Math.round(net[k as MemberId] * 100) / 100;
@@ -75,6 +86,9 @@ export function minimizeTransfers(net: Record<MemberId, number>): Transfer[] {
   }
   return transfers;
 }
+
+/** A transfer is identified by both ends — one debtor can owe two creditors. */
+export const transferKey = (t: Pick<Transfer, "from" | "to">) => `${t.from}|${t.to}`;
 
 export const fmtEUR = (n: number) =>
   "€" + n.toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

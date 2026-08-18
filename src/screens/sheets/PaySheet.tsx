@@ -4,7 +4,7 @@ import { ArrowRight, Banknote, Check, Landmark, ShieldCheck, Wallet } from "luci
 import { Avatar, BottomSheet, PrimaryButton } from "../../components/ui";
 import { useStore, type Sheet } from "../../state/store";
 import { MEMBERS } from "../../data/mock";
-import { expenseShares, fmtEUR } from "../../data/balances";
+import { expenseShares, fmtEUR, transferKey } from "../../data/balances";
 import type { Transfer } from "../../data/types";
 
 /** European rails a group of friends actually uses. */
@@ -22,7 +22,9 @@ export default function PaySheet() {
 
   // Keep the last transfer so content doesn't vanish during the close animation
   const lastRef = useRef<Transfer | null>(null);
-  const live = open ? (state.transfers.find((x) => x.from === state.sheetPayload) ?? null) : null;
+  const live = open
+    ? (state.transfers.find((x) => transferKey(x) === state.sheetPayload) ?? null)
+    : null;
   if (live) lastRef.current = live;
   const t = live ?? lastRef.current;
 
@@ -53,9 +55,15 @@ export default function PaySheet() {
     .map((e) => ({ id: e.id, title: e.title, share: expenseShares(e)[t.from] ?? 0 }))
     .filter((r) => r.share > 0.005);
   const credits = state.expenses.filter((e) => e.paidBy === t.from);
+  // Anything this payer owes a *different* creditor is settled on its own row,
+  // so it must come off this breakdown or the total wouldn't match the transfer.
+  const elsewhere = state.transfers.filter((x) => x.from === t.from && x.to !== t.to);
   const net =
     Math.round(
-      (covers.reduce((s, r) => s + r.share, 0) - credits.reduce((s, e) => s + e.amount, 0)) * 100,
+      (covers.reduce((s, r) => s + r.share, 0) -
+        credits.reduce((s, e) => s + e.amount, 0) -
+        elsewhere.reduce((s, x) => s + x.amount, 0)) *
+        100,
     ) / 100;
   if (import.meta.env.DEV) {
     console.assert(
@@ -73,7 +81,7 @@ export default function PaySheet() {
     if (confirming || t.status === "paid") return;
     setConfirming(true);
     timer.current = window.setTimeout(() => {
-      dispatch({ type: "MARK_PAID", from: t.from });
+      dispatch({ type: "MARK_PAID", from: t.from, to: t.to });
       dispatch({
         type: "PUSH_BANNER",
         icon: "money",
@@ -114,7 +122,9 @@ export default function PaySheet() {
             {fmtEUR(t.amount)}
           </p>
           <p className="mt-1 text-center text-xs font-medium text-ink-500">
-            One payment clears everything {payer.name} owes.
+            {elsewhere.length
+              ? `Clears everything ${payer.name} owes ${payee.name}.`
+              : `One payment clears everything ${payer.name} owes.`}
           </p>
 
           {/* what this covers — derived shares, never a mock list */}
@@ -138,6 +148,16 @@ export default function PaySheet() {
                   </span>
                   <span className="tabular shrink-0 text-[13px] font-semibold text-lagoon-700">
                     −{fmtEUR(e.amount)}
+                  </span>
+                </div>
+              ))}
+              {elsewhere.map((x) => (
+                <div key={transferKey(x)} className="flex items-baseline justify-between gap-2">
+                  <span className="min-w-0 truncate text-[13px] font-medium text-ink-600">
+                    Settled separately with {MEMBERS[x.to].name}
+                  </span>
+                  <span className="tabular shrink-0 text-[13px] font-semibold text-lagoon-700">
+                    −{fmtEUR(x.amount)}
                   </span>
                 </div>
               ))}

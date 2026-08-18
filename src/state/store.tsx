@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useReducer, useRef } from 
 import type {
   BuzzEvent,
   Expense,
+  ExpenseItem,
   ItineraryItem,
   MemberId,
   Memory,
@@ -14,7 +15,6 @@ import {
   MEMBERS,
   PLACES,
   RESTAURANTS,
-  dinnerExpense,
   initialBuzz,
   initialExpenses,
   initialItinerary,
@@ -22,7 +22,7 @@ import {
   initialNotes,
   initialPoll,
 } from "../data/mock";
-import { computeBalances, minimizeTransfers, pairwiseIouCount } from "../data/balances";
+import { computeBalances, fmtEUR, minimizeTransfers, pairwiseIouCount } from "../data/balances";
 
 /** Navigation model: root (home) OR trip context with tabs; sheets overlay. */
 export type Tab = "hub" | "swipe" | "split" | "buzz";
@@ -154,9 +154,9 @@ type Action =
   | { type: "SEND_POLL" }
   | { type: "VOTE"; member: MemberId; restaurantId: string }
   | { type: "CLOSE_POLL" }
-  | { type: "ADD_DINNER_EXPENSE" }
+  | { type: "ADD_DINNER_EXPENSE"; items: ExpenseItem[] }
   | { type: "START_SETTLE" }
-  | { type: "MARK_PAID"; from: MemberId }
+  | { type: "MARK_PAID"; from: MemberId; to: MemberId }
   | { type: "SET_SPLIT_SEGMENT"; segment: "expenses" | "balances" }
   | { type: "PUSH_BANNER"; icon: BannerIcon; text: string }
   | { type: "POP_BANNER"; id: number }
@@ -331,10 +331,26 @@ function reducer(state: State, action: Action): State {
     }
     case "ADD_DINNER_EXPENSE": {
       if (state.expenses.some((e) => e.id === "e-dinner")) return { ...state, sheet: null };
+      // Commit what the sheet actually built: the presenter's toggles decide the
+      // items, and the roster decides who could be on them at all.
+      const items = action.items.filter((it) => it.sharedBy.length > 0);
+      if (!items.length) return { ...state, sheet: null };
+      const amount = Math.round(items.reduce((s, it) => s + it.amount, 0) * 100) / 100;
+      const dinner: Expense = {
+        id: "e-dinner",
+        title: "Dinner @ Maré Alta",
+        paidBy: "ari",
+        amount,
+        date: "Aug 17",
+        sharedBy: state.members.filter((m) => items.some((it) => it.sharedBy.includes(m))),
+        items,
+        linkedItineraryId: "it-dinner",
+      };
+      const expenses = [...state.expenses, dinner];
       const dinnerBuzz: BuzzEvent = {
         id: "b" + buzzId++,
         icon: "money",
-        text: "Ari added Dinner @ Maré Alta · €186.00",
+        text: `Ari added ${dinner.title} · ${fmtEUR(amount)}`,
         time: "23:12",
       };
       return {
@@ -344,17 +360,19 @@ function reducer(state: State, action: Action): State {
         sheet: null,
         tab: "split",
         splitSegment: "balances",
-        expenses: [...state.expenses, dinnerExpense],
-        transfers: minimizeTransfers(computeBalances([...state.expenses, dinnerExpense])),
+        expenses,
+        transfers: minimizeTransfers(computeBalances(expenses)),
       };
     }
     case "START_SETTLE":
       return { ...state, settleStarted: true, sheet: "settle" };
     case "MARK_PAID": {
+      // A debtor can owe two different creditors, so a transfer is identified
+      // by both ends — paying one must not silently clear the other.
       const transfers = state.transfers.map((t) =>
-        t.from === action.from ? { ...t, status: "paid" as const } : t,
+        t.from === action.from && t.to === action.to ? { ...t, status: "paid" as const } : t,
       );
-      const allSquare = transfers.every((t) => t.status === "paid");
+      const allSquare = transfers.length > 0 && transfers.every((t) => t.status === "paid");
       return { ...state, transfers, allSquare };
     }
     case "SET_SPLIT_SEGMENT":
@@ -488,19 +506,36 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (state.settleStarted) {
       once("settle", () => {
-        /* Skip anyone the presenter already paid by hand — MARK_PAID itself is
-           idempotent, but the buzz line would otherwise be posted twice. */
-        const pay = (from: MemberId, text: string, time: string) => {
-          if (latest.current.transfers.find((t) => t.from === from)?.status === "paid") return;
-          dispatch({ type: "MARK_PAID", from });
-          dispatch({ type: "PUSH_BUZZ", icon: "money", text, time });
-        };
-        after(3000, () => pay("ren", "Ren paid Nic €23.00", "23:41"));
-        after(6000, () => pay("tomas", "Tomás paid Nic €96.00", "23:44"));
-        after(9000, () => pay("zoe", "Zoe paid Nic €126.00", "23:47"));
-        after(12000, () => {
-          pay("maya", "Maya paid Nic €141.00 — all settled", "23:52");
-          dispatch({ type: "PUSH_BANNER", icon: "done", text: "Everyone’s square — that’s a wrap" });
+        /* Smallest debt first, and every line reads off the real transfer — the
+           board is whatever the ledger produced, not the canonical four. */
+        const times = ["23:41", "23:44", "23:47", "23:52"];
+        const order = [...state.transfers].reverse();
+        order.forEach((t, i) => {
+          const last = i === order.length - 1;
+          after(3000 * (i + 1), () => {
+            /* Skip anyone the presenter already paid by hand — MARK_PAID itself
+               is idempotent, but the buzz line would be posted twice. */
+            const live = latest.current.transfers.find(
+              (x) => x.from === t.from && x.to === t.to,
+            );
+            if (live && live.status !== "paid") {
+              dispatch({ type: "MARK_PAID", from: t.from, to: t.to });
+              dispatch({
+                type: "PUSH_BUZZ",
+                icon: "money",
+                text: `${MEMBERS[t.from].name} paid ${MEMBERS[t.to].name} ${fmtEUR(live.amount)}${
+                  last ? " — all settled" : ""
+                }`,
+                time: times[i] ?? times[times.length - 1],
+              });
+            }
+            if (last)
+              dispatch({
+                type: "PUSH_BANNER",
+                icon: "done",
+                text: "Everyone’s square — that’s a wrap",
+              });
+          });
         });
       });
     }
@@ -544,7 +579,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  const balances = computeBalances(state.expenses);
+  // Settled transfers are money that has actually moved — a balance that ignored
+  // them would contradict the "paid ✓" chips right below it.
+  const balances = computeBalances(
+    state.expenses,
+    state.transfers.filter((t) => t.status === "paid"),
+  );
   const iousBefore = pairwiseIouCount(state.expenses);
 
   // Dev-only hook for automated walkthrough testing

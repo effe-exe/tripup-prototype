@@ -15,7 +15,7 @@ import {
 import { useStore } from "../state/store";
 import { MEMBERS } from "../data/mock";
 import type { Expense, MemberId } from "../data/types";
-import { expenseShares, fmtEUR, fmtEURWhole } from "../data/balances";
+import { expenseShares, fmtEUR, fmtEURWhole, transferKey } from "../data/balances";
 import {
   AnimatedNumber,
   Avatar,
@@ -40,6 +40,11 @@ const EXPENSE_ICONS: Record<string, LucideIcon> = {
 function ExpenseRow({ e, i, onOpen }: { e: Expense; i: number; onOpen: () => void }) {
   const Icon = EXPENSE_ICONS[e.id] ?? Receipt;
   const isDinner = e.id === "e-dinner";
+  // Read the exclusion off the committed items — the chip can't outlive the split.
+  const partial = e.items?.find((it) => it.sharedBy.length < e.sharedBy.length);
+  const excluded = partial
+    ? e.sharedBy.filter((m) => !partial.sharedBy.includes(m)).map((m) => MEMBERS[m].name)
+    : [];
   return (
     <motion.button
       {...rowEnter(i)}
@@ -59,9 +64,9 @@ function ExpenseRow({ e, i, onOpen }: { e: Expense; i: number; onOpen: () => voi
         <p className="text-xs font-medium text-ink-500">
           Paid by {MEMBERS[e.paidBy].name} · split {e.sharedBy.length} ways
         </p>
-        {isDinner && (
+        {partial && excluded.length > 0 && (
           <span className="mt-1 inline-flex rounded-full bg-golden-50 px-2 py-0.5 text-[11px] font-semibold text-warning-700">
-            wine excl. Ren &amp; Nic
+            {partial.label.toLowerCase()} excl. {excluded.join(" & ")}
           </span>
         )}
       </div>
@@ -84,6 +89,10 @@ export default function SplitTab() {
   const sorted = [...state.members].sort((a, b) => Math.abs(bal(b)) - Math.abs(bal(a)));
   const maxAbs = Math.max(...sorted.map((m) => Math.abs(bal(m))), 1);
   const hasTransfers = state.transfers.length > 0;
+  const remaining = state.transfers.filter((t) => t.status === "pending").length;
+  const payees = [...new Set(state.transfers.map((t) => t.to))];
+  /** Square for the group, not just for Ari — who starts at €0 anyway. */
+  const groupSquare = state.members.every((m) => Math.abs(bal(m)) < 0.005);
   const newestFirst = [...state.expenses].reverse();
 
   return (
@@ -134,7 +143,13 @@ export default function SplitTab() {
             {/* My status hero */}
             <div className="rounded-3xl bg-sunset-50 px-5 py-6 text-center">
               <p className="text-[15px] font-semibold text-sunset-700">
-                {ariSquare ? "You're all square" : ariBal < 0 ? "You owe" : "You're owed"}
+                {groupSquare
+                  ? "Everyone's square"
+                  : ariSquare
+                    ? "You're all square"
+                    : ariBal < 0
+                      ? "You owe"
+                      : "You're owed"}
               </p>
               <AnimatedNumber
                 value={Math.abs(ariBal)}
@@ -154,6 +169,11 @@ export default function SplitTab() {
                   const owed = state.expenses
                     .map((e) => ({ e, share: expenseShares(e)[id] ?? 0 }))
                     .filter((r) => r.share > 0.005);
+                  // Money that has already moved — without these lines the Net
+                  // below wouldn't add up once someone has paid.
+                  const settled = state.transfers.filter(
+                    (t) => t.status === "paid" && (t.from === id || t.to === id),
+                  );
                   return (
                     <motion.div key={id} {...rowEnter(i)}>
                       <motion.button
@@ -183,7 +203,7 @@ export default function SplitTab() {
                         </div>
                         {zero ? (
                           <span className="tabular shrink-0 text-sm font-semibold text-ink-500">
-                            €0
+                            {fmtEUR(0)}
                           </span>
                         ) : (
                           <AnimatedNumber
@@ -245,6 +265,33 @@ export default function SplitTab() {
                                     </span>
                                   </div>
                                 ))}
+                                {settled.length > 0 && (
+                                  <>
+                                    <p className="mt-2.5 text-[11px] font-bold text-ink-500">
+                                      Settled
+                                    </p>
+                                    {settled.map((t) => (
+                                      <div
+                                        key={t.from + t.to}
+                                        className="mt-1 flex items-baseline justify-between gap-2"
+                                      >
+                                        <span className="min-w-0 truncate text-xs font-medium text-ink-600">
+                                          {t.from === id
+                                            ? `Paid ${MEMBERS[t.to].name}`
+                                            : `${MEMBERS[t.from].name} paid up`}
+                                        </span>
+                                        <span
+                                          className={`tabular shrink-0 text-xs font-semibold ${
+                                            t.from === id ? "text-lagoon-700" : "text-ink-600"
+                                          }`}
+                                        >
+                                          {t.from === id ? "+" : "−"}
+                                          {fmtEUR(t.amount)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </>
+                                )}
                                 <div className="mt-2.5 flex items-baseline justify-between border-t border-line-200 pt-2">
                                   <span className="text-xs font-semibold text-ink-600">Net</span>
                                   <span
@@ -275,20 +322,35 @@ export default function SplitTab() {
               {hasTransfers ? (
                 <>
                   <p className="text-[15px] font-bold text-ink-900">
-                    <Calculator size={14} strokeWidth={2} className="mr-1 inline align-[-2px]" />Smart settle: <span className="tabular">{iousBefore}</span> IOUs →{" "}
-                    <span className="tabular">{state.transfers.length}</span> payments
+                    <Calculator size={14} strokeWidth={2} className="mr-1 inline align-[-2px]" />
+                    Smart settle:{" "}
+                    {remaining === state.transfers.length ? (
+                      <>
+                        <span className="tabular">{iousBefore}</span> IOUs →{" "}
+                        <span className="tabular">{state.transfers.length}</span> payments
+                      </>
+                    ) : remaining > 0 ? (
+                      <>
+                        <span className="tabular">{remaining}</span>{" "}
+                        {remaining === 1 ? "payment" : "payments"} left
+                      </>
+                    ) : (
+                      <>
+                        all <span className="tabular">{state.transfers.length}</span> payments done
+                      </>
+                    )}
                   </p>
                   <div className="mt-3 flex flex-col gap-3">
                     {state.transfers.map((t, i) => {
                       const pending = t.status === "pending";
                       return (
                         <motion.button
-                          key={t.from}
+                          key={transferKey(t)}
                           {...rowEnter(i, 0.06)}
                           whileTap={pending ? tapCard : undefined}
                           disabled={!pending}
                           onClick={() =>
-                            dispatch({ type: "OPEN_SHEET", sheet: "pay", payload: t.from })
+                            dispatch({ type: "OPEN_SHEET", sheet: "pay", payload: transferKey(t) })
                           }
                           aria-label={
                             pending
@@ -310,7 +372,11 @@ export default function SplitTab() {
                     })}
                   </div>
                   <p className="mt-3 text-xs font-medium text-ink-500">
-                    Tap a row to pay. Everyone pays at most once — Nic receives everything.
+                    {remaining === 0
+                      ? "Every debt on this trip is cleared."
+                      : payees.length === 1
+                        ? `Tap a row to pay. Everyone pays at most once — ${MEMBERS[payees[0]].name} receives everything.`
+                        : "Tap a row to pay — the fewest payments that clear every debt."}
                   </p>
                 </>
               ) : (

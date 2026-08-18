@@ -7,9 +7,8 @@ import type { MemberId } from "../../data/types";
 import { fmtEUR } from "../../data/balances";
 import { Avatar, BottomSheet, PrimaryButton, Segmented } from "../../components/ui";
 
-/** Canonical demo bill (screen 08). Committed expense is always the §7 dinner —
- *  toggles below are presentational, but every preview number is computed live. */
-const ALL: MemberId[] = ["ari", "nic", "maya", "tomas", "zoe", "ren"];
+/** Canonical demo bill (screen 08). Who can be on an item is the live trip
+ *  roster, and what gets committed is exactly what these toggles say. */
 const TOTAL = 186;
 const BILL_ITEMS = [
   { key: "food", label: "Food & cover", amount: 138 },
@@ -18,7 +17,8 @@ const BILL_ITEMS = [
 type ItemKey = (typeof BILL_ITEMS)[number]["key"];
 type SplitMode = "evenly" | "items" | "custom";
 
-/** Preview order per spec: Ari 35 · Maya 35 · Tomás 35 · Zoe 35 · Nic 23 · Ren 23 */
+/** Preview order per spec: Ari 35 · Maya 35 · Tomás 35 · Zoe 35 · Nic 23 · Ren 23.
+ *  Filtered to the live roster, so a missing member is simply absent. */
 const PREVIEW_ORDER: MemberId[] = ["ari", "maya", "tomas", "zoe", "nic", "ren"];
 
 const fmtShare = (n: number) =>
@@ -59,22 +59,25 @@ export default function AddExpenseSheet() {
   const { state, dispatch } = useStore();
   const open = state.sheet === "addExpense";
 
+  /** Only people actually on this trip can be on the bill. */
+  const roster = state.members;
+
   const [mode, setMode] = useState<SplitMode>("items");
   const [linked, setLinked] = useState(true);
   /** DEMO STATE: everyone starts on both items; presenter taps Ren & Nic off wine. */
   const [shared, setShared] = useState<Record<ItemKey, MemberId[]>>({
-    food: ALL,
-    wine: ALL,
+    food: roster,
+    wine: roster,
   });
 
-  // Fresh draft each time the sheet opens
+  // Fresh draft each time the sheet opens — or when the roster changes under it
   useEffect(() => {
     if (open) {
       setMode("items");
       setLinked(true);
-      setShared({ food: ALL, wine: ALL });
+      setShared({ food: roster, wine: roster });
     }
-  }, [open]);
+  }, [open, roster]);
 
   const toggle = (item: ItemKey, id: MemberId) => {
     setShared((prev) => {
@@ -83,14 +86,14 @@ export default function AddExpenseSheet() {
         if (cur.length <= 1) return prev; // never split by zero
         return { ...prev, [item]: cur.filter((m) => m !== id) };
       }
-      return { ...prev, [item]: ALL.filter((m) => cur.includes(m) || m === id) };
+      return { ...prev, [item]: roster.filter((m) => cur.includes(m) || m === id) };
     });
   };
 
   /** Live per-member share from current toggle state (real math, not mock). */
   const shareOf = (id: MemberId) =>
     mode === "evenly"
-      ? TOTAL / ALL.length
+      ? TOTAL / roster.length
       : BILL_ITEMS.reduce(
           (sum, it) =>
             shared[it.key].includes(id) ? sum + it.amount / shared[it.key].length : sum,
@@ -99,6 +102,18 @@ export default function AddExpenseSheet() {
 
   const itemsTotal = BILL_ITEMS.reduce((s, it) => s + it.amount, 0);
   const balanced = Math.abs(itemsTotal - TOTAL) < 0.005;
+
+  const previewOrder = PREVIEW_ORDER.filter((id) => roster.includes(id));
+
+  /** Exactly what the preview above is showing — this is what gets committed. */
+  const payload =
+    mode === "evenly"
+      ? [{ label: "Dinner @ Maré Alta", amount: TOTAL, sharedBy: roster }]
+      : BILL_ITEMS.map((it) => ({
+          label: it.label,
+          amount: it.amount,
+          sharedBy: shared[it.key],
+        }));
 
   return (
     <BottomSheet open={open} onClose={() => dispatch({ type: "CLOSE_SHEET" })} full>
@@ -169,7 +184,7 @@ export default function AddExpenseSheet() {
                       </span>
                     </div>
                     <div className="mt-3 flex items-start justify-between gap-1">
-                      {ALL.map((id) => (
+                      {roster.map((id) => (
                         <AvatarToggle
                           key={id}
                           id={id}
@@ -220,12 +235,12 @@ export default function AddExpenseSheet() {
             <div className="mt-4 rounded-2xl border border-line-200 bg-paper-0 p-4 shadow-elev-1">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex gap-2">
-                  {ALL.map((id) => (
+                  {roster.map((id) => (
                     <Avatar key={id} id={id} size={32} />
                   ))}
                 </div>
                 <span className="tabular shrink-0 text-[13px] font-semibold text-ink-600">
-                  {fmtEUR(TOTAL / ALL.length)} each
+                  {fmtEUR(TOTAL / roster.length)} each
                 </span>
               </div>
             </div>
@@ -245,7 +260,7 @@ export default function AddExpenseSheet() {
           <div className="mb-3 rounded-2xl bg-paper-100 px-4 py-2.5 text-center">
             <div className="text-[11px] font-semibold text-ink-500">Live shares</div>
             <div className="tabular mt-0.5 text-[13px] font-semibold text-ink-900">
-              {PREVIEW_ORDER.map((id, i) => (
+              {previewOrder.map((id, i) => (
                 <span key={id}>
                   {i > 0 && <span className="text-ink-500"> · </span>}
                   {MEMBERS[id].name}{" "}
@@ -262,7 +277,7 @@ export default function AddExpenseSheet() {
               ))}
             </div>
           </div>
-          <PrimaryButton full onClick={() => dispatch({ type: "ADD_DINNER_EXPENSE" })}>
+          <PrimaryButton full onClick={() => dispatch({ type: "ADD_DINNER_EXPENSE", items: payload })}>
             Add expense
           </PrimaryButton>
         </div>

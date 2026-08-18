@@ -2,12 +2,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useStore } from "../../state/store";
 import { MEMBERS } from "../../data/mock";
 import type { MemberId } from "../../data/types";
-import { fmtEUR, fmtEURWhole } from "../../data/balances";
+import { fmtEUR, fmtEURWhole, transferKey } from "../../data/balances";
 import { AnimatedNumber, Avatar, BottomSheet, StatusBadge, StatusBar } from "../../components/ui";
 import { rowEnter, tapCard } from "../../components/motion";
 import { Check } from "lucide-react";
-
-const WRAP_AVATARS: MemberId[] = ["ari", "nic", "maya", "tomas", "zoe", "ren"];
 
 /** 7 confetti pieces, one slow drift each — no loops, nothing flashes. */
 const CONFETTI = [
@@ -69,12 +67,12 @@ export default function SettleSheet() {
               const pending = t.status === "pending";
               return (
                 <motion.button
-                  key={t.from}
+                  key={transferKey(t)}
                   layout
                   {...rowEnter(i, 0.06)}
                   whileTap={pending ? tapCard : undefined}
                   disabled={!pending}
-                  onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "pay", payload: t.from })}
+                  onClick={() => dispatch({ type: "OPEN_SHEET", sheet: "pay", payload: transferKey(t) })}
                   aria-label={
                     pending
                       ? `Pay ${MEMBERS[t.to].name} ${fmtEUR(t.amount)} for ${MEMBERS[t.from].name}`
@@ -90,7 +88,7 @@ export default function SettleSheet() {
                     <p className="text-xs font-medium text-ink-500">
                       {!pending
                         ? "Settled"
-                        : t.from === "ren"
+                        : MEMBERS[t.from].guest
                           ? "guest checkout · tap to pay"
                           : "Tap to pay"}
                     </p>
@@ -149,7 +147,7 @@ export default function SettleSheet() {
                   transition={{ type: "spring", stiffness: 240, damping: 30, delay: 0.16 }}
                   className="tabular text-sm font-semibold text-white/95"
                 >
-                  {fmtEURWhole(tripTotal)} · 4 days · 6 friends · 0 debts
+                  {fmtEURWhole(tripTotal)} · 4 days · {state.members.length} friends · 0 debts
                 </motion.p>
                 <motion.div
                   initial={{ opacity: 0.4, y: 12 }}
@@ -157,7 +155,7 @@ export default function SettleSheet() {
                   transition={{ type: "spring", stiffness: 240, damping: 30, delay: 0.22 }}
                   className="flex gap-1.5"
                 >
-                  {WRAP_AVATARS.map((id) => (
+                  {state.members.map((id) => (
                     <SettledDisc key={id} id={id} />
                   ))}
                 </motion.div>
